@@ -1,53 +1,60 @@
-// Dictionary Translations (Svenska / English)
 const translations = {
     sv: {
         tab_personal: "Personuppgifter",
-        tab_experience: "Arbetslivserfarenhet",
-        tab_skills: "Utbildning & Färdigheter",
+        tab_experience: "Erfarenhet",
+        tab_skills: "Kompetenser",
         title_personal: "Personuppgifter",
-        lbl_photo: "Profilbild",
-        lbl_name: "Fullständigt namn",
-        lbl_title: "Yrkesroll",
-        lbl_email: "E-postadress",
-        lbl_phone: "Telefonnummer",
-        lbl_driver_license: "Körkort (t.ex. Ja (B))",
-        lbl_summary: "Profiltext",
+        lbl_photo: "Profilbild (Valfritt)",
+        lbl_name: "Namn",
+        lbl_title: "Yrkesroll / Titel",
+        lbl_email: "E-post",
+        lbl_phone: "Telefon",
+        lbl_korkort: "Körkort",
+        lbl_truckkort: "Truckkort",
+        lbl_summary: "Profil / Om mig",
         title_experience: "Arbetslivserfarenhet",
         btn_add_exp: "Lägg till erfarenhet",
-        title_skills: "Utbildning & Färdigheter",
+        title_skills: "Utbildning & Kompetenser",
         btn_add_edu: "Lägg till utbildning",
-        lbl_skills: "Färdigheter (separera med kommatecken)",
+        lbl_skills: "Färdigheter / Datorkunskaper",
+        lbl_languages: "Språk",
         btn_next: "Nästa ➔",
         btn_prev: "⬅ Föregående",
         preview_profile: "Profil",
         preview_experience: "Arbetslivserfarenhet",
         preview_education: "Utbildning",
-        preview_skills: "Färdigheter",
+        preview_skills: "Kompetenser",
+        preview_languages: "Språk",
+        preview_references: "Referenser lämnas gärna på begäran.",
         dl_btn: "Ladda ner PDF"
     },
     en: {
         tab_personal: "Personal Info",
-        tab_experience: "Work Experience",
-        tab_skills: "Education & Skills",
+        tab_experience: "Experience",
+        tab_skills: "Skills",
         title_personal: "Personal Details",
-        lbl_photo: "Profile Picture",
+        lbl_photo: "Profile Picture (Optional)",
         lbl_name: "Full Name",
         lbl_title: "Job Title",
-        lbl_email: "Email Address",
-        lbl_phone: "Phone Number",
-        lbl_driver_license: "Driver's License (e.g., Yes (B))",
-        lbl_summary: "Professional Summary",
+        lbl_email: "Email",
+        lbl_phone: "Phone",
+        lbl_korkort: "Driver's License",
+        lbl_truckkort: "Forklift License",
+        lbl_summary: "Profile / Summary",
         title_experience: "Work Experience",
         btn_add_exp: "Add Experience",
         title_skills: "Education & Skills",
         btn_add_edu: "Add Education",
-        lbl_skills: "Skills (comma separated)",
+        lbl_skills: "Skills",
+        lbl_languages: "Languages",
         btn_next: "Next ➔",
         btn_prev: "⬅ Previous",
         preview_profile: "Profile",
         preview_experience: "Work Experience",
         preview_education: "Education",
         preview_skills: "Skills",
+        preview_languages: "Languages",
+        preview_references: "References available upon request.",
         dl_btn: "Download PDF"
     }
 };
@@ -70,16 +77,14 @@ function showStep(stepNumber) {
     document.getElementById('step-3').classList.add('hidden');
 
     [1, 2, 3].forEach(i => {
-        const tab = document.getElementById(`step-tab-${i}`);
-        tab.className = "text-gray-400 pb-1";
+        document.getElementById(`step-tab-${i}`).className = "text-gray-400 pb-1";
     });
 
     document.getElementById(`step-${stepNumber}`).classList.remove('hidden');
-    const activeTab = document.getElementById(`step-tab-${stepNumber}`);
-    activeTab.className = "font-semibold text-blue-600 border-b-2 border-blue-600 pb-1";
+    document.getElementById(`step-tab-${stepNumber}`).className = "text-blue-600 border-b-2 border-blue-600 pb-1 font-semibold";
 }
 
-// Photo Upload Logic
+// Photo Upload
 document.getElementById('input-photo').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
@@ -92,34 +97,67 @@ document.getElementById('input-photo').addEventListener('change', function(e) {
     }
 });
 
-// Single Inputs Sync
-const inputs = [
-    { inputId: 'input-name', previewId: 'preview-name', defaultValue: 'Anna Karlsson' },
-    { inputId: 'input-title', previewId: 'preview-title', defaultValue: 'Systemutvecklare' },
-    { inputId: 'input-email', previewId: 'preview-email', defaultValue: 'anna@example.se' },
-    { inputId: 'input-phone', previewId: 'preview-phone', defaultValue: '070 123 45 67' },
-    { inputId: 'input-summary', previewId: 'preview-summary', defaultValue: 'Erfaren och engagerad utvecklare...' }
+// Sync Basic Input Fields
+const simpleInputs = [
+    { id: 'input-name', target: 'preview-name' },
+    { id: 'input-title', target: 'preview-title' },
+    { id: 'input-email', target: 'preview-email' },
+    { id: 'input-phone', target: 'preview-phone' }
 ];
 
-inputs.forEach(item => {
-    document.getElementById(item.inputId).addEventListener('input', (e) => {
-        document.getElementById(item.previewId).innerText = e.target.value.trim() !== '' ? e.target.value : item.defaultValue;
+simpleInputs.forEach(item => {
+    document.getElementById(item.id).addEventListener('input', (e) => {
+        document.getElementById(item.target).innerText = e.target.value.trim();
     });
 });
 
-// Driver's License Input Sync
-document.getElementById('input-license').addEventListener('input', (e) => {
+// Summary
+document.getElementById('input-summary').addEventListener('input', (e) => {
     const val = e.target.value.trim();
-    const container = document.getElementById('preview-license-container');
-    if (val !== '') {
-        document.getElementById('preview-license').innerText = val;
+    const sec = document.getElementById('sec-summary');
+    if (val) {
+        document.getElementById('preview-summary').innerText = val;
+        sec.classList.remove('hidden');
+    } else {
+        sec.classList.add('hidden');
+    }
+});
+
+// Licenses Check
+function checkLicenses() {
+    const kor = document.getElementById('input-korkort').value.trim();
+    const truck = document.getElementById('input-truckkort').value.trim();
+    const sec = document.getElementById('sec-licenses');
+
+    if (kor || truck) sec.classList.remove('hidden');
+    else sec.classList.add('hidden');
+}
+
+document.getElementById('input-korkort').addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    const container = document.getElementById('preview-korkort-container');
+    if (val) {
+        document.getElementById('preview-korkort').innerText = val;
         container.classList.remove('hidden');
     } else {
         container.classList.add('hidden');
     }
+    checkLicenses();
 });
 
-// Dynamic Experiences Logic
+document.getElementById('input-truckkort').addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    const container = document.getElementById('preview-truckkort-container');
+    if (val) {
+        document.getElementById('preview-truckkort').innerText = val;
+        container.classList.remove('hidden');
+    } else {
+        container.classList.add('hidden');
+    }
+    checkLicenses();
+});
+
+// Dynamic Experiences
 let expCount = 0;
 function addExperienceField() {
     expCount++;
@@ -128,14 +166,14 @@ function addExperienceField() {
     
     const div = document.createElement('div');
     div.id = `exp-item-${id}`;
-    div.className = "p-3 border border-gray-200 rounded-lg space-y-2 relative bg-gray-50";
+    div.className = "p-2.5 border border-gray-200 rounded-lg space-y-2 relative bg-gray-50";
     div.innerHTML = `
-        <button type="button" onclick="removeExperienceField(${id})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold">✕ Sätt bort</button>
-        <input type="text" id="exp-title-${id}" oninput="renderExperiences()" class="w-full border border-gray-200 rounded p-2 text-sm focus:outline-none" placeholder="Företag & Roll (t.ex. Volvo - Utvecklare)">
-        <textarea id="exp-desc-${id}" oninput="renderExperiences()" rows="2" class="w-full border border-gray-200 rounded p-2 text-sm focus:outline-none" placeholder="Beskrivning av dina arbetsuppgifter..."></textarea>
+        <button type="button" onclick="removeExperienceField(${id})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold">✕ Ta bort</button>
+        <input type="text" id="exp-title-${id}" oninput="renderExperiences()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Företag & Roll (t.ex. Volvo - Montör)">
+        <input type="text" id="exp-date-${id}" oninput="renderExperiences()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Tidsperiod (t.ex. 2020 - Nuvarande)">
+        <textarea id="exp-desc-${id}" oninput="renderExperiences()" rows="2" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Arbetsuppgifter..."></textarea>
     `;
     container.appendChild(div);
-    renderExperiences();
 }
 
 function removeExperienceField(id) {
@@ -146,31 +184,37 @@ function removeExperienceField(id) {
 
 function renderExperiences() {
     const previewContainer = document.getElementById('preview-experience-list');
+    const sec = document.getElementById('sec-experience');
     previewContainer.innerHTML = '';
 
     const items = document.querySelectorAll('#experience-list > div');
-    if (items.length === 0) {
-        previewContainer.innerHTML = '<div><h4 class="font-semibold text-xs text-gray-800">Företag AB</h4><p class="text-xs text-gray-600 whitespace-pre-line mt-0.5">• Utvecklade webbapplikationer.</p></div>';
-        return;
-    }
+    let hasContent = false;
 
     items.forEach(item => {
         const id = item.id.replace('exp-item-', '');
-        const title = document.getElementById(`exp-title-${id}`).value;
-        const desc = document.getElementById(`exp-desc-${id}`).value;
+        const title = document.getElementById(`exp-title-${id}`).value.trim();
+        const date = document.getElementById(`exp-date-${id}`).value.trim();
+        const desc = document.getElementById(`exp-desc-${id}`).value.trim();
 
         if (title || desc) {
+            hasContent = true;
             const expDiv = document.createElement('div');
             expDiv.innerHTML = `
-                <h4 class="font-semibold text-xs text-gray-800">${title || 'Arbetsplats'}</h4>
+                <div class="flex justify-between items-baseline">
+                    <h4 class="font-bold text-xs text-slate-800">${title}</h4>
+                    <span class="text-[10px] font-semibold text-slate-500">${date}</span>
+                </div>
                 <p class="text-xs text-gray-600 whitespace-pre-line mt-0.5">${desc}</p>
             `;
             previewContainer.appendChild(expDiv);
         }
     });
+
+    if (hasContent) sec.classList.remove('hidden');
+    else sec.classList.add('hidden');
 }
 
-// Dynamic Education Logic
+// Dynamic Education
 let eduCount = 0;
 function addEducationField() {
     eduCount++;
@@ -179,14 +223,13 @@ function addEducationField() {
 
     const div = document.createElement('div');
     div.id = `edu-item-${id}`;
-    div.className = "p-3 border border-gray-200 rounded-lg space-y-2 relative bg-gray-50";
+    div.className = "p-2.5 border border-gray-200 rounded-lg space-y-2 relative bg-gray-50";
     div.innerHTML = `
-        <button type="button" onclick="removeEducationField(${id})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold">✕ Sätt bort</button>
-        <input type="text" id="edu-title-${id}" oninput="renderEducations()" class="w-full border border-gray-200 rounded p-2 text-sm focus:outline-none" placeholder="Utbildning & Examen (t.ex. Datavetenskap)">
-        <input type="text" id="edu-school-${id}" oninput="renderEducations()" class="w-full border border-gray-200 rounded p-2 text-sm focus:outline-none" placeholder="Skola / Universitet (t.ex. KTH)">
+        <button type="button" onclick="removeEducationField(${id})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold">✕ Ta bort</button>
+        <input type="text" id="edu-title-${id}" oninput="renderEducations()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Utbildning / Examen">
+        <input type="text" id="edu-school-${id}" oninput="renderEducations()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Skola / Ort & År">
     `;
     container.appendChild(div);
-    renderEducations();
 }
 
 function removeEducationField(id) {
@@ -197,55 +240,66 @@ function removeEducationField(id) {
 
 function renderEducations() {
     const previewContainer = document.getElementById('preview-education-list');
+    const sec = document.getElementById('sec-education');
     previewContainer.innerHTML = '';
 
     const items = document.querySelectorAll('#education-list > div');
-    if (items.length === 0) {
-        previewContainer.innerHTML = '<div><h4 class="font-semibold text-xs text-gray-800">Kandidatexamen</h4><p class="text-xs text-gray-500">Universitet</p></div>';
-        return;
-    }
+    let hasContent = false;
 
     items.forEach(item => {
         const id = item.id.replace('edu-item-', '');
-        const title = document.getElementById(`edu-title-${id}`).value;
-        const school = document.getElementById(`edu-school-${id}`).value;
+        const title = document.getElementById(`edu-title-${id}`).value.trim();
+        const school = document.getElementById(`edu-school-${id}`).value.trim();
 
         if (title || school) {
+            hasContent = true;
             const eduDiv = document.createElement('div');
             eduDiv.innerHTML = `
-                <h4 class="font-semibold text-xs text-gray-800">${title || 'Utbildning'}</h4>
+                <h4 class="font-bold text-xs text-slate-800">${title}</h4>
                 <p class="text-xs text-gray-500">${school}</p>
             `;
             previewContainer.appendChild(eduDiv);
         }
     });
+
+    if (hasContent) sec.classList.remove('hidden');
+    else sec.classList.add('hidden');
 }
 
-// Skills Input Sync
+// Skills Sync
 document.getElementById('input-skills').addEventListener('input', (e) => {
-    const skillsContainer = document.getElementById('preview-skills');
-    const skillsArray = e.target.value.split(',');
-
-    skillsContainer.innerHTML = '';
+    const val = e.target.value.trim();
+    const sec = document.getElementById('sec-skills');
+    const container = document.getElementById('preview-skills');
     
-    skillsArray.forEach(skill => {
-        if(skill.trim() !== '') {
-            const tag = document.createElement('span');
-            tag.className = 'bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-md font-medium';
-            tag.innerText = skill.trim();
-            skillsContainer.appendChild(tag);
-        }
-    });
+    if (val) {
+        const skills = val.split(',').filter(s => s.trim() !== '');
+        container.innerHTML = skills.map(s => `<span>• ${s.trim()}</span>`).join('');
+        sec.classList.remove('hidden');
+    } else {
+        sec.classList.add('hidden');
+    }
 });
 
-// Initialize first dynamic fields
+// Languages Sync
+document.getElementById('input-languages').addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    const sec = document.getElementById('sec-languages');
+    if (val) {
+        document.getElementById('preview-languages').innerText = val;
+        sec.classList.remove('hidden');
+    } else {
+        sec.classList.add('hidden');
+    }
+});
+
+// Initialize First Entry Fields
 addExperienceField();
 addEducationField();
 
 // Download PDF
 document.getElementById('download-btn').addEventListener('click', () => {
     const element = document.getElementById('cv-preview');
-    
     const opt = {
         margin:       0,
         filename:     'Mitt-CV.pdf',
@@ -253,6 +307,5 @@ document.getElementById('download-btn').addEventListener('click', () => {
         html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-
     html2pdf().set(opt).from(element).save();
 });
