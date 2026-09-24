@@ -1,311 +1,184 @@
-const translations = {
-    sv: {
-        tab_personal: "Personuppgifter",
-        tab_experience: "Erfarenhet",
-        tab_skills: "Kompetenser",
-        title_personal: "Personuppgifter",
-        lbl_photo: "Profilbild (Valfritt)",
-        lbl_name: "Namn",
-        lbl_title: "Yrkesroll / Titel",
-        lbl_email: "E-post",
-        lbl_phone: "Telefon",
-        lbl_korkort: "Körkort",
-        lbl_truckkort: "Truckkort",
-        lbl_summary: "Profil / Om mig",
-        title_experience: "Arbetslivserfarenhet",
-        btn_add_exp: "Lägg till erfarenhet",
-        title_skills: "Utbildning & Kompetenser",
-        btn_add_edu: "Lägg till utbildning",
-        lbl_skills: "Färdigheter / Datorkunskaper",
-        lbl_languages: "Språk",
-        btn_next: "Nästa ➔",
-        btn_prev: "⬅ Föregående",
-        preview_profile: "Profil",
-        preview_experience: "Arbetslivserfarenhet",
-        preview_education: "Utbildning",
-        preview_skills: "Kompetenser",
-        preview_languages: "Språk",
-        preview_references: "Referenser lämnas gärna på begäran.",
-        dl_btn: "Ladda ner PDF"
-    },
-    en: {
-        tab_personal: "Personal Info",
-        tab_experience: "Experience",
-        tab_skills: "Skills",
-        title_personal: "Personal Details",
-        lbl_photo: "Profile Picture (Optional)",
-        lbl_name: "Full Name",
-        lbl_title: "Job Title",
-        lbl_email: "Email",
-        lbl_phone: "Phone",
-        lbl_korkort: "Driver's License",
-        lbl_truckkort: "Forklift License",
-        lbl_summary: "Profile / Summary",
-        title_experience: "Work Experience",
-        btn_add_exp: "Add Experience",
-        title_skills: "Education & Skills",
-        btn_add_edu: "Add Education",
-        lbl_skills: "Skills",
-        lbl_languages: "Languages",
-        btn_next: "Next ➔",
-        btn_prev: "⬅ Previous",
-        preview_profile: "Profile",
-        preview_experience: "Work Experience",
-        preview_education: "Education",
-        preview_skills: "Skills",
-        preview_languages: "Languages",
-        preview_references: "References available upon request.",
-        dl_btn: "Download PDF"
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- 1. Steg-navigering (Step Navigation) ---
+    const steps = document.querySelectorAll('.form-step');
+    const nextBtns = document.querySelectorAll('.btn-next');
+    const prevBtns = document.querySelectorAll('.btn-prev');
+    const navItems = document.querySelectorAll('.step-item');
+
+    let currentStep = 0;
+
+    function updateStep(stepIndex) {
+        steps.forEach((step, index) => {
+            step.classList.toggle('active', index === stepIndex);
+        });
+        navItems.forEach((item, index) => {
+            item.classList.toggle('active', index === stepIndex);
+        });
     }
-};
 
-let currentLang = 'sv';
-
-function changeLanguage(lang) {
-    currentLang = lang;
-    document.querySelectorAll('[data-i18n]').forEach(element => {
-        const key = element.getAttribute('data-i18n');
-        if (translations[lang][key]) {
-            element.innerText = translations[lang][key];
-        }
-    });
-}
-
-function showStep(stepNumber) {
-    document.getElementById('step-1').classList.add('hidden');
-    document.getElementById('step-2').classList.add('hidden');
-    document.getElementById('step-3').classList.add('hidden');
-
-    [1, 2, 3].forEach(i => {
-        document.getElementById(`step-tab-${i}`).className = "text-gray-400 pb-1";
+    nextBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateStep(currentStep);
+            }
+        });
     });
 
-    document.getElementById(`step-${stepNumber}`).classList.remove('hidden');
-    document.getElementById(`step-tab-${stepNumber}`).className = "text-blue-600 border-b-2 border-blue-600 pb-1 font-semibold";
-}
-
-// Photo Upload
-document.getElementById('input-photo').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            document.getElementById('preview-photo').src = event.target.result;
-            document.getElementById('photo-container').classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
-// Sync Basic Input Fields
-const simpleInputs = [
-    { id: 'input-name', target: 'preview-name' },
-    { id: 'input-title', target: 'preview-title' },
-    { id: 'input-email', target: 'preview-email' },
-    { id: 'input-phone', target: 'preview-phone' }
-];
-
-simpleInputs.forEach(item => {
-    document.getElementById(item.id).addEventListener('input', (e) => {
-        document.getElementById(item.target).innerText = e.target.value.trim();
-    });
-});
-
-// Summary
-document.getElementById('input-summary').addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    const sec = document.getElementById('sec-summary');
-    if (val) {
-        document.getElementById('preview-summary').innerText = val;
-        sec.classList.remove('hidden');
-    } else {
-        sec.classList.add('hidden');
-    }
-});
-
-// Licenses Check
-function checkLicenses() {
-    const kor = document.getElementById('input-korkort').value.trim();
-    const truck = document.getElementById('input-truckkort').value.trim();
-    const sec = document.getElementById('sec-licenses');
-
-    if (kor || truck) sec.classList.remove('hidden');
-    else sec.classList.add('hidden');
-}
-
-document.getElementById('input-korkort').addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    const container = document.getElementById('preview-korkort-container');
-    if (val) {
-        document.getElementById('preview-korkort').innerText = val;
-        container.classList.remove('hidden');
-    } else {
-        container.classList.add('hidden');
-    }
-    checkLicenses();
-});
-
-document.getElementById('input-truckkort').addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    const container = document.getElementById('preview-truckkort-container');
-    if (val) {
-        document.getElementById('preview-truckkort').innerText = val;
-        container.classList.remove('hidden');
-    } else {
-        container.classList.add('hidden');
-    }
-    checkLicenses();
-});
-
-// Dynamic Experiences
-let expCount = 0;
-function addExperienceField() {
-    expCount++;
-    const id = expCount;
-    const container = document.getElementById('experience-list');
-    
-    const div = document.createElement('div');
-    div.id = `exp-item-${id}`;
-    div.className = "p-2.5 border border-gray-200 rounded-lg space-y-2 relative bg-gray-50";
-    div.innerHTML = `
-        <button type="button" onclick="removeExperienceField(${id})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold">✕ Ta bort</button>
-        <input type="text" id="exp-title-${id}" oninput="renderExperiences()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Företag & Roll (t.ex. Volvo - Montör)">
-        <input type="text" id="exp-date-${id}" oninput="renderExperiences()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Tidsperiod (t.ex. 2020 - Nuvarande)">
-        <textarea id="exp-desc-${id}" oninput="renderExperiences()" rows="2" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Arbetsuppgifter..."></textarea>
-    `;
-    container.appendChild(div);
-}
-
-function removeExperienceField(id) {
-    const item = document.getElementById(`exp-item-${id}`);
-    if (item) item.remove();
-    renderExperiences();
-}
-
-function renderExperiences() {
-    const previewContainer = document.getElementById('preview-experience-list');
-    const sec = document.getElementById('sec-experience');
-    previewContainer.innerHTML = '';
-
-    const items = document.querySelectorAll('#experience-list > div');
-    let hasContent = false;
-
-    items.forEach(item => {
-        const id = item.id.replace('exp-item-', '');
-        const title = document.getElementById(`exp-title-${id}`).value.trim();
-        const date = document.getElementById(`exp-date-${id}`).value.trim();
-        const desc = document.getElementById(`exp-desc-${id}`).value.trim();
-
-        if (title || desc) {
-            hasContent = true;
-            const expDiv = document.createElement('div');
-            expDiv.innerHTML = `
-                <div class="flex justify-between items-baseline">
-                    <h4 class="font-bold text-xs text-slate-800">${title}</h4>
-                    <span class="text-[10px] font-semibold text-slate-500">${date}</span>
-                </div>
-                <p class="text-xs text-gray-600 whitespace-pre-line mt-0.5">${desc}</p>
-            `;
-            previewContainer.appendChild(expDiv);
-        }
+    prevBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep(currentStep);
+            }
+        });
     });
 
-    if (hasContent) sec.classList.remove('hidden');
-    else sec.classList.add('hidden');
-}
-
-// Dynamic Education
-let eduCount = 0;
-function addEducationField() {
-    eduCount++;
-    const id = eduCount;
-    const container = document.getElementById('education-list');
-
-    const div = document.createElement('div');
-    div.id = `edu-item-${id}`;
-    div.className = "p-2.5 border border-gray-200 rounded-lg space-y-2 relative bg-gray-50";
-    div.innerHTML = `
-        <button type="button" onclick="removeEducationField(${id})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold">✕ Ta bort</button>
-        <input type="text" id="edu-title-${id}" oninput="renderEducations()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Utbildning / Examen">
-        <input type="text" id="edu-school-${id}" oninput="renderEducations()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Skola / Ort & År">
-    `;
-    container.appendChild(div);
-}
-
-function removeEducationField(id) {
-    const item = document.getElementById(`edu-item-${id}`);
-    if (item) item.remove();
-    renderEducations();
-}
-
-function renderEducations() {
-    const previewContainer = document.getElementById('preview-education-list');
-    const sec = document.getElementById('sec-education');
-    previewContainer.innerHTML = '';
-
-    const items = document.querySelectorAll('#education-list > div');
-    let hasContent = false;
-
-    items.forEach(item => {
-        const id = item.id.replace('edu-item-', '');
-        const title = document.getElementById(`edu-title-${id}`).value.trim();
-        const school = document.getElementById(`edu-school-${id}`).value.trim();
-
-        if (title || school) {
-            hasContent = true;
-            const eduDiv = document.createElement('div');
-            eduDiv.innerHTML = `
-                <h4 class="font-bold text-xs text-slate-800">${title}</h4>
-                <p class="text-xs text-gray-500">${school}</p>
-            `;
-            previewContainer.appendChild(eduDiv);
-        }
-    });
-
-    if (hasContent) sec.classList.remove('hidden');
-    else sec.classList.add('hidden');
-}
-
-// Skills Sync
-document.getElementById('input-skills').addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    const sec = document.getElementById('sec-skills');
-    const container = document.getElementById('preview-skills');
-    
-    if (val) {
-        const skills = val.split(',').filter(s => s.trim() !== '');
-        container.innerHTML = skills.map(s => `<span>• ${s.trim()}</span>`).join('');
-        sec.classList.remove('hidden');
-    } else {
-        sec.classList.add('hidden');
-    }
-});
-
-// Languages Sync
-document.getElementById('input-languages').addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    const sec = document.getElementById('sec-languages');
-    if (val) {
-        document.getElementById('preview-languages').innerText = val;
-        sec.classList.remove('hidden');
-    } else {
-        sec.classList.add('hidden');
-    }
-});
-
-// Initialize First Entry Fields
-addExperienceField();
-addEducationField();
-
-// Download PDF
-document.getElementById('download-btn').addEventListener('click', () => {
-    const element = document.getElementById('cv-preview');
-    const opt = {
-        margin:       0,
-        filename:     'Mitt-CV.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    // --- 2. Realtidsuppdatering (Real-time Preview Update) ---
+    const inputs = {
+        name: document.getElementById('input-name'),
+        title: document.getElementById('input-title'),
+        email: document.getElementById('input-email'),
+        phone: document.getElementById('input-phone'),
+        korkort: document.getElementById('input-korkort'),
+        truckkort: document.getElementById('input-truckkort'),
+        about: document.getElementById('input-about')
     };
-    html2pdf().set(opt).from(element).save();
+
+    const preview = {
+        name: document.getElementById('preview-name'),
+        title: document.getElementById('preview-title'),
+        email: document.getElementById('preview-email'),
+        phone: document.getElementById('preview-phone'),
+        korkort: document.getElementById('preview-korkort'),
+        truckkort: document.getElementById('preview-truckkort'),
+        about: document.getElementById('preview-about')
+    };
+
+    // Uppdatera personuppgifter
+    inputs.name?.addEventListener('input', (e) => {
+        preview.name.textContent = e.target.value || 'FÖRNAMN EFTERNAMN';
+    });
+
+    inputs.title?.addEventListener('input', (e) => {
+        preview.title.textContent = e.target.value || 'YRKESTITEL';
+    });
+
+    inputs.email?.addEventListener('input', (e) => {
+        preview.email.textContent = e.target.value || 'din.e-post@exempel.se';
+    });
+
+    inputs.phone?.addEventListener('input', (e) => {
+        preview.phone.textContent = e.target.value || '070 123 45 67';
+    });
+
+    inputs.korkort?.addEventListener('input', (e) => {
+        preview.korkort.textContent = e.target.value || 'B-körkort';
+    });
+
+    inputs.truckkort?.addEventListener('input', (e) => {
+        preview.truckkort.textContent = e.target.value || 'A1-A4, B1-B4';
+    });
+
+    inputs.about?.addEventListener('input', (e) => {
+        preview.about.textContent = e.target.value || 'Kort beskrivning om dig själv...';
+    });
+
+    // Profilbild uppladdning
+    const imageInput = document.getElementById('input-photo');
+    const previewPhoto = document.getElementById('preview-photo');
+
+    imageInput?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                previewPhoto.src = event.target.result;
+                previewPhoto.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // --- 3. Dynamiska sektioner (Erfarenheter & Kompetenser) ---
+    
+    // Lägg till Arbetslivserfarenhet
+    const expContainer = document.getElementById('experience-inputs');
+    const addExpBtn = document.getElementById('add-experience-btn');
+    const expPreviewContainer = document.getElementById('preview-experience-list');
+
+    addExpBtn?.addEventListener('click', () => {
+        const id = Date.now();
+        const expItemHtml = `
+            <div class="dynamic-item" data-id="${id}">
+                <input type="text" placeholder="Företag" class="exp-company">
+                <input type="text" placeholder="Roll / Titel" class="exp-role">
+                <input type="text" placeholder="Period (t.ex. 2020 - Nuvarande)" class="exp-period">
+                <textarea placeholder="Beskrivning av dina arbetsuppgifter..." class="exp-desc"></textarea>
+                <button type="button" class="btn-remove">Ta bort</button>
+            </div>
+        `;
+        expContainer.insertAdjacentHTML('beforeend', expItemHtml);
+
+        // Skapa motsvarande i förhandsgranskningen
+        const previewHtml = `
+            <div class="cv-item" id="preview-exp-${id}">
+                <div class="cv-item-header">
+                    <strong class="prev-exp-role">Roll / Titel</strong> — <span class="prev-exp-company">Företag</span>
+                    <span class="cv-date prev-exp-period">Period</span>
+                </div>
+                <p class="prev-exp-desc">Beskrivning...</p>
+            </div>
+        `;
+        expPreviewContainer.insertAdjacentHTML('beforeend', previewHtml);
+
+        // Koppla händelser
+        const currentItem = expContainer.querySelector(`[data-id="${id}"]`);
+        const currentPreview = expPreviewContainer.querySelector(`#preview-exp-${id}`);
+
+        currentItem.querySelector('.exp-company').addEventListener('input', (e) => {
+            currentPreview.querySelector('.prev-exp-company').textContent = e.target.value || 'Företag';
+        });
+        currentItem.querySelector('.exp-role').addEventListener('input', (e) => {
+            currentPreview.querySelector('.prev-exp-role').textContent = e.target.value || 'Roll / Titel';
+        });
+        currentItem.querySelector('.exp-period').addEventListener('input', (e) => {
+            currentPreview.querySelector('.prev-exp-period').textContent = e.target.value || 'Period';
+        });
+        currentItem.querySelector('.exp-desc').addEventListener('input', (e) => {
+            currentPreview.querySelector('.prev-exp-desc').textContent = e.target.value || 'Beskrivning...';
+        });
+
+        currentItem.querySelector('.btn-remove').addEventListener('click', () => {
+            currentItem.remove();
+            currentPreview.remove();
+        });
+    });
+
+    // --- 4. Ladda ner PDF med användarens namn (Download PDF with User Name) ---
+    const downloadBtn = document.getElementById('download-btn');
+
+    downloadBtn?.addEventListener('click', () => {
+        const element = document.getElementById('cv-preview');
+
+        // Hämta namnet från formuläret och rensa bort extra mellanslag
+        const userName = inputs.name ? inputs.name.value.trim() : '';
+
+        // Om namnet finns skapas filnamnet som "CV_Förnamn_Efternamn.pdf", annars "Mitt_CV.pdf"
+        const formattedName = userName ? userName.replace(/\s+/g, '_') : '';
+        const fileName = formattedName ? `CV_${formattedName}.pdf` : 'Mitt_CV.pdf';
+
+        const opt = {
+            margin:       0,
+            filename:     fileName,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Generera PDF
+        html2pdf().set(opt).from(element).save();
+    });
+
 });
