@@ -1,311 +1,413 @@
-const translations = {
-    sv: {
-        tab_personal: "Personuppgifter",
-        tab_experience: "Erfarenhet",
-        tab_skills: "Kompetenser",
-        title_personal: "Personuppgifter",
-        lbl_photo: "Profilbild (Valfritt)",
-        lbl_name: "Namn",
-        lbl_title: "Yrkesroll / Titel",
-        lbl_email: "E-post",
-        lbl_phone: "Telefon",
-        lbl_korkort: "Körkort",
-        lbl_truckkort: "Truckkort",
-        lbl_summary: "Profil / Om mig",
-        title_experience: "Arbetslivserfarenhet",
-        btn_add_exp: "Lägg till erfarenhet",
-        title_skills: "Utbildning & Kompetenser",
-        btn_add_edu: "Lägg till utbildning",
-        lbl_skills: "Färdigheter / Datorkunskaper",
-        lbl_languages: "Språk",
-        btn_next: "Nästa ➔",
-        btn_prev: "⬅ Föregående",
-        preview_profile: "Profil",
-        preview_experience: "Arbetslivserfarenhet",
-        preview_education: "Utbildning",
-        preview_skills: "Kompetenser",
-        preview_languages: "Språk",
-        preview_references: "Referenser lämnas gärna på begäran.",
-        dl_btn: "Ladda ner PDF"
-    },
-    en: {
-        tab_personal: "Personal Info",
-        tab_experience: "Experience",
-        tab_skills: "Skills",
-        title_personal: "Personal Details",
-        lbl_photo: "Profile Picture (Optional)",
-        lbl_name: "Full Name",
-        lbl_title: "Job Title",
-        lbl_email: "Email",
-        lbl_phone: "Phone",
-        lbl_korkort: "Driver's License",
-        lbl_truckkort: "Forklift License",
-        lbl_summary: "Profile / Summary",
-        title_experience: "Work Experience",
-        btn_add_exp: "Add Experience",
-        title_skills: "Education & Skills",
-        btn_add_edu: "Add Education",
-        lbl_skills: "Skills",
-        lbl_languages: "Languages",
-        btn_next: "Next ➔",
-        btn_prev: "⬅ Previous",
-        preview_profile: "Profile",
-        preview_experience: "Work Experience",
-        preview_education: "Education",
-        preview_skills: "Skills",
-        preview_languages: "Languages",
-        preview_references: "References available upon request.",
-        dl_btn: "Download PDF"
-    }
-};
+let expCount = 0;
+let eduCount = 0;
+let skillCount = 0;
+let langCount = 0;
+let hobbyCount = 0;
 
-let currentLang = 'sv';
+const months = ["Januari", "Februari", "Mars", "April", "Maj", "Juni", "Juli", "Augusti", "September", "Oktober", "November", "December"];
 
-function changeLanguage(lang) {
-    currentLang = lang;
-    document.querySelectorAll('[data-i18n]').forEach(element => {
-        const key = element.getAttribute('data-i18n');
-        if (translations[lang][key]) {
-            element.innerText = translations[lang][key];
+document.addEventListener("DOMContentLoaded", () => {
+    setupBasicListeners();
+    addExperienceField();
+    addEducationField();
+});
+
+// Synkronisera grundläggande information
+function setupBasicListeners() {
+    const inputs = [
+        { id: "input-name", target: "preview-name" },
+        { id: "input-title", target: "preview-title" },
+        { id: "input-email", target: "preview-email" },
+        { id: "input-phone", target: "preview-phone" },
+        { id: "input-city", target: "preview-city" }
+    ];
+
+    inputs.forEach(item => {
+        document.getElementById(item.id)?.addEventListener("input", (e) => {
+            document.getElementById(item.target).textContent = e.target.value.trim();
+        });
+    });
+
+    document.getElementById("input-summary")?.addEventListener("input", (e) => {
+        const val = e.target.value.trim();
+        document.getElementById("preview-summary").textContent = val;
+        toggleSection("sec-summary", val !== "");
+    });
+
+    document.getElementById("input-photo")?.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                document.getElementById("preview-photo").src = event.target.result;
+                document.getElementById("photo-container").classList.remove("hidden");
+            };
+            reader.readAsDataURL(file);
         }
     });
 }
 
-function showStep(stepNumber) {
-    document.getElementById('step-1').classList.add('hidden');
-    document.getElementById('step-2').classList.add('hidden');
-    document.getElementById('step-3').classList.add('hidden');
-
-    [1, 2, 3].forEach(i => {
-        document.getElementById(`step-tab-${i}`).className = "text-gray-400 pb-1";
-    });
-
-    document.getElementById(`step-${stepNumber}`).classList.remove('hidden');
-    document.getElementById(`step-tab-${stepNumber}`).className = "text-blue-600 border-b-2 border-blue-600 pb-1 font-semibold";
+// Extra dynamiska fält
+function addExtraField(label) {
+    const container = document.getElementById("extra-fields-container");
+    const fieldId = `extra-${Date.now()}`;
+    
+    const div = document.createElement("div");
+    div.className = "flex items-center gap-2";
+    div.id = fieldId;
+    div.innerHTML = `
+        <span class="text-xs font-medium text-gray-500 w-24">${label}:</span>
+        <input type="text" oninput="renderExtraFields()" class="extra-val border border-gray-200 rounded p-1 text-xs flex-1" placeholder="Ange ${label}">
+        <button onclick="document.getElementById('${fieldId}').remove(); renderExtraFields();" class="text-red-500 text-xs">✕</button>
+    `;
+    div.dataset.label = label;
+    container.appendChild(div);
 }
 
-// Photo Upload
-document.getElementById('input-photo').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            document.getElementById('preview-photo').src = event.target.result;
-            document.getElementById('photo-container').classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
-// Sync Basic Input Fields
-const simpleInputs = [
-    { id: 'input-name', target: 'preview-name' },
-    { id: 'input-title', target: 'preview-title' },
-    { id: 'input-email', target: 'preview-email' },
-    { id: 'input-phone', target: 'preview-phone' }
-];
-
-simpleInputs.forEach(item => {
-    document.getElementById(item.id).addEventListener('input', (e) => {
-        document.getElementById(item.target).innerText = e.target.value.trim();
+function renderExtraFields() {
+    const preview = document.getElementById("preview-extras");
+    preview.innerHTML = "";
+    document.querySelectorAll("#extra-fields-container > div").forEach(div => {
+        const label = div.dataset.label;
+        const val = div.querySelector(".extra-val").value.trim();
+        if (val) {
+            const p = document.createElement("p");
+            p.className = "text-[11px] text-slate-300";
+            p.textContent = `${label}: ${val}`;
+            preview.appendChild(p);
+        }
     });
-});
-
-// Summary
-document.getElementById('input-summary').addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    const sec = document.getElementById('sec-summary');
-    if (val) {
-        document.getElementById('preview-summary').innerText = val;
-        sec.classList.remove('hidden');
-    } else {
-        sec.classList.add('hidden');
-    }
-});
-
-// Licenses Check
-function checkLicenses() {
-    const kor = document.getElementById('input-korkort').value.trim();
-    const truck = document.getElementById('input-truckkort').value.trim();
-    const sec = document.getElementById('sec-licenses');
-
-    if (kor || truck) sec.classList.remove('hidden');
-    else sec.classList.add('hidden');
 }
 
-document.getElementById('input-korkort').addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    const container = document.getElementById('preview-korkort-container');
-    if (val) {
-        document.getElementById('preview-korkort').innerText = val;
-        container.classList.remove('hidden');
-    } else {
-        container.classList.add('hidden');
+// Dynamiska datumalternativ
+function getYearOptions() {
+    let opts = '<option value="">År</option>';
+    const currentYear = new Date().getFullYear();
+    for (let i = currentYear; i >= 1970; i--) {
+        opts += `<option value="${i}">${i}</option>`;
     }
-    checkLicenses();
-});
+    return opts;
+}
 
-document.getElementById('input-truckkort').addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    const container = document.getElementById('preview-truckkort-container');
-    if (val) {
-        document.getElementById('preview-truckkort').innerText = val;
-        container.classList.remove('hidden');
-    } else {
-        container.classList.add('hidden');
-    }
-    checkLicenses();
-});
+function getMonthOptions() {
+    let opts = '<option value="">Månad</option>';
+    months.forEach(m => opts += `<option value="${m}">${m}</option>`);
+    return opts;
+}
 
-// Dynamic Experiences
-let expCount = 0;
+// Arbetslivserfarenhet
 function addExperienceField() {
     expCount++;
     const id = expCount;
-    const container = document.getElementById('experience-list');
-    
-    const div = document.createElement('div');
+    const container = document.getElementById("experience-list");
+
+    const div = document.createElement("div");
     div.id = `exp-item-${id}`;
-    div.className = "p-2.5 border border-gray-200 rounded-lg space-y-2 relative bg-gray-50";
+    div.className = "p-3 border border-gray-200 rounded-lg bg-gray-50 space-y-2 relative";
     div.innerHTML = `
-        <button type="button" onclick="removeExperienceField(${id})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold">✕ Ta bort</button>
-        <input type="text" id="exp-title-${id}" oninput="renderExperiences()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Företag & Roll (t.ex. Volvo - Montör)">
-        <input type="text" id="exp-date-${id}" oninput="renderExperiences()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Tidsperiod (t.ex. 2020 - Nuvarande)">
-        <textarea id="exp-desc-${id}" oninput="renderExperiences()" rows="2" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Arbetsuppgifter..."></textarea>
+        <button onclick="removeExp(${id})" class="absolute top-2 right-2 text-red-500 text-xs font-bold">✕</button>
+        <div>
+            <label class="text-[10px] text-gray-400 font-semibold uppercase">Tjänst</label>
+            <input type="text" id="exp-role-${id}" oninput="renderExp()" class="w-full border rounded p-1.5 text-xs">
+        </div>
+        <div>
+            <label class="text-[10px] text-gray-400 font-semibold uppercase">Arbetsgivare</label>
+            <input type="text" id="exp-company-${id}" oninput="renderExp()" class="w-full border rounded p-1.5 text-xs">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+            <div>
+                <label class="text-[10px] text-gray-400 font-semibold uppercase">Startdatum</label>
+                <div class="flex gap-1">
+                    <select id="exp-s-m-${id}" onchange="renderExp()" class="border rounded p-1 text-xs w-1/2">${getMonthOptions()}</select>
+                    <select id="exp-s-y-${id}" onchange="renderExp()" class="border rounded p-1 text-xs w-1/2">${getYearOptions()}</select>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between items-center">
+                    <label class="text-[10px] text-gray-400 font-semibold uppercase">Slutdatum</label>
+                    <label class="text-[10px] text-blue-600 flex items-center gap-1 cursor-pointer">
+                        <input type="checkbox" id="exp-present-${id}" onchange="togglePresent(${id})"> Nutid
+                    </label>
+                </div>
+                <div id="exp-end-container-${id}" class="flex gap-1">
+                    <select id="exp-e-m-${id}" onchange="renderExp()" class="border rounded p-1 text-xs w-1/2">${getMonthOptions()}</select>
+                    <select id="exp-e-y-${id}" onchange="renderExp()" class="border rounded p-1 text-xs w-1/2">${getYearOptions()}</select>
+                </div>
+            </div>
+        </div>
+        <div>
+            <label class="text-[10px] text-gray-400 font-semibold uppercase">Beskrivning</label>
+            <textarea id="exp-desc-${id}" oninput="renderExp()" rows="2" class="w-full border rounded p-1.5 text-xs" placeholder="Börja skriva här..."></textarea>
+        </div>
     `;
     container.appendChild(div);
 }
 
-function removeExperienceField(id) {
-    const item = document.getElementById(`exp-item-${id}`);
-    if (item) item.remove();
-    renderExperiences();
+function togglePresent(id) {
+    const isPresent = document.getElementById(`exp-present-${id}`).checked;
+    const container = document.getElementById(`exp-end-container-${id}`);
+    if (isPresent) {
+        container.classList.add("hidden");
+    } else {
+        container.classList.remove("hidden");
+    }
+    renderExp();
 }
 
-function renderExperiences() {
-    const previewContainer = document.getElementById('preview-experience-list');
-    const sec = document.getElementById('sec-experience');
-    previewContainer.innerHTML = '';
+function removeExp(id) {
+    document.getElementById(`exp-item-${id}`)?.remove();
+    renderExp();
+}
 
-    const items = document.querySelectorAll('#experience-list > div');
-    let hasContent = false;
+function renderExp() {
+    const preview = document.getElementById("preview-experience-list");
+    preview.innerHTML = "";
+    let hasData = false;
 
-    items.forEach(item => {
-        const id = item.id.replace('exp-item-', '');
-        const title = document.getElementById(`exp-title-${id}`).value.trim();
-        const date = document.getElementById(`exp-date-${id}`).value.trim();
-        const desc = document.getElementById(`exp-desc-${id}`).value.trim();
+    document.querySelectorAll("#experience-list > div").forEach(div => {
+        const id = div.id.replace("exp-item-", "");
+        const role = document.getElementById(`exp-role-${id}`)?.value.trim();
+        const company = document.getElementById(`exp-company-${id}`)?.value.trim();
+        const sm = document.getElementById(`exp-s-m-${id}`)?.value;
+        const sy = document.getElementById(`exp-s-y-${id}`)?.value;
+        const isPresent = document.getElementById(`exp-present-${id}`)?.checked;
+        const em = document.getElementById(`exp-e-m-${id}`)?.value;
+        const ey = document.getElementById(`exp-e-y-${id}`)?.value;
+        const desc = document.getElementById(`exp-desc-${id}`)?.value.trim();
 
-        if (title || desc) {
-            hasContent = true;
-            const expDiv = document.createElement('div');
-            expDiv.innerHTML = `
+        if (role || company) {
+            hasData = true;
+            const start = `${sm} ${sy}`.trim();
+            const end = isPresent ? "Nutid" : `${em} ${ey}`.trim();
+            const dateStr = start || end ? `${start} - ${end}` : "";
+
+            const item = document.createElement("div");
+            item.innerHTML = `
                 <div class="flex justify-between items-baseline">
-                    <h4 class="font-bold text-xs text-slate-800">${title}</h4>
-                    <span class="text-[10px] font-semibold text-slate-500">${date}</span>
+                    <h4 class="font-bold text-xs text-slate-800">${role}</h4>
+                    <span class="text-[10px] text-slate-500">${dateStr}</span>
                 </div>
-                <p class="text-xs text-gray-600 whitespace-pre-line mt-0.5">${desc}</p>
+                <p class="text-xs text-blue-600 font-semibold">${company}</p>
+                <p class="text-xs text-gray-600 leading-relaxed mt-1 whitespace-pre-line">${desc}</p>
             `;
-            previewContainer.appendChild(expDiv);
+            preview.appendChild(item);
         }
     });
 
-    if (hasContent) sec.classList.remove('hidden');
-    else sec.classList.add('hidden');
+    toggleSection("sec-experience", hasData);
 }
 
-// Dynamic Education
-let eduCount = 0;
+// Utbildning
 function addEducationField() {
     eduCount++;
     const id = eduCount;
-    const container = document.getElementById('education-list');
+    const container = document.getElementById("education-list");
 
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.id = `edu-item-${id}`;
-    div.className = "p-2.5 border border-gray-200 rounded-lg space-y-2 relative bg-gray-50";
+    div.className = "p-3 border border-gray-200 rounded-lg bg-gray-50 space-y-2 relative";
     div.innerHTML = `
-        <button type="button" onclick="removeEducationField(${id})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold">✕ Ta bort</button>
-        <input type="text" id="edu-title-${id}" oninput="renderEducations()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Utbildning / Examen">
-        <input type="text" id="edu-school-${id}" oninput="renderEducations()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Skola / Ort & År">
+        <button onclick="document.getElementById('edu-item-${id}').remove(); renderEdu();" class="absolute top-2 right-2 text-red-500 text-xs font-bold">✕</button>
+        <input type="text" id="edu-title-${id}" oninput="renderEdu()" placeholder="Utbildning" class="w-full border rounded p-1.5 text-xs">
+        <input type="text" id="edu-school-${id}" oninput="renderEdu()" placeholder="Lärosäte / Skola" class="w-full border rounded p-1.5 text-xs">
+        <div class="flex gap-1">
+            <select id="edu-y-${id}" onchange="renderEdu()" class="border rounded p-1 text-xs w-full">${getYearOptions()}</select>
+        </div>
     `;
     container.appendChild(div);
 }
 
-function removeEducationField(id) {
-    const item = document.getElementById(`edu-item-${id}`);
-    if (item) item.remove();
-    renderEducations();
-}
+function renderEdu() {
+    const preview = document.getElementById("preview-education-list");
+    preview.innerHTML = "";
+    let hasData = false;
 
-function renderEducations() {
-    const previewContainer = document.getElementById('preview-education-list');
-    const sec = document.getElementById('sec-education');
-    previewContainer.innerHTML = '';
-
-    const items = document.querySelectorAll('#education-list > div');
-    let hasContent = false;
-
-    items.forEach(item => {
-        const id = item.id.replace('edu-item-', '');
-        const title = document.getElementById(`edu-title-${id}`).value.trim();
-        const school = document.getElementById(`edu-school-${id}`).value.trim();
+    document.querySelectorAll("#education-list > div").forEach(div => {
+        const id = div.id.replace("edu-item-", "");
+        const title = document.getElementById(`edu-title-${id}`)?.value.trim();
+        const school = document.getElementById(`edu-school-${id}`)?.value.trim();
+        const year = document.getElementById(`edu-y-${id}`)?.value;
 
         if (title || school) {
-            hasContent = true;
-            const eduDiv = document.createElement('div');
-            eduDiv.innerHTML = `
-                <h4 class="font-bold text-xs text-slate-800">${title}</h4>
-                <p class="text-xs text-gray-500">${school}</p>
+            hasData = true;
+            const item = document.createElement("div");
+            item.innerHTML = `
+                <div class="flex justify-between items-baseline">
+                    <h4 class="font-bold text-xs text-slate-800">${title}</h4>
+                    <span class="text-[10px] text-slate-500">${year}</span>
+                </div>
+                <p class="text-xs text-gray-600">${school}</p>
             `;
-            previewContainer.appendChild(eduDiv);
+            preview.appendChild(item);
         }
     });
 
-    if (hasContent) sec.classList.remove('hidden');
-    else sec.classList.add('hidden');
+    toggleSection("sec-education", hasData);
 }
 
-// Skills Sync
-document.getElementById('input-skills').addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    const sec = document.getElementById('sec-skills');
-    const container = document.getElementById('preview-skills');
-    
-    if (val) {
-        const skills = val.split(',').filter(s => s.trim() !== '');
-        container.innerHTML = skills.map(s => `<span>• ${s.trim()}</span>`).join('');
-        sec.classList.remove('hidden');
-    } else {
-        sec.classList.add('hidden');
+// Färdigheter
+function addSkillField(name = "", level = "") {
+    skillCount++;
+    const id = skillCount;
+    const container = document.getElementById("skills-list");
+
+    const div = document.createElement("div");
+    div.id = `skill-item-${id}`;
+    div.className = "flex gap-2 items-center bg-gray-50 p-2 rounded border";
+    div.innerHTML = `
+        <input type="text" id="skill-name-${id}" value="${name}" oninput="renderSkills()" placeholder="Färdighet" class="border rounded p-1 text-xs flex-1">
+        <select id="skill-level-${id}" onchange="renderSkills()" class="border rounded p-1 text-xs text-gray-600">
+            <option value="">Gör ett val</option>
+            <option value="Nybörjare" ${level==='Nybörjare'?'selected':''}>Nybörjare</option>
+            <option value="Medel" ${level==='Medel'?'selected':''}>Medel</option>
+            <option value="Avancerad" ${level==='Avancerad'?'selected':''}>Avancerad</option>
+            <option value="Expert" ${level==='Expert'?'selected':''}>Expert</option>
+        </select>
+        <button onclick="document.getElementById('skill-item-${id}').remove(); renderSkills();" class="text-red-500 text-xs">✕</button>
+    `;
+    container.appendChild(div);
+    renderSkills();
+}
+
+function addSkillFromTag(skillName) {
+    addSkillField(skillName, "Medel");
+}
+
+function renderSkills() {
+    const preview = document.getElementById("preview-skills-list");
+    preview.innerHTML = "";
+    let hasData = false;
+
+    document.querySelectorAll("#skills-list > div").forEach(div => {
+        const id = div.id.replace("skill-item-", "");
+        const name = document.getElementById(`skill-name-${id}`)?.value.trim();
+        const level = document.getElementById(`skill-level-${id}`)?.value;
+
+        if (name) {
+            hasData = true;
+            const p = document.createElement("p");
+            p.className = "text-[11px] text-slate-200 flex justify-between";
+            p.innerHTML = `<span>• ${name}</span> <span class="text-slate-400 text-[10px]">${level}</span>`;
+            preview.appendChild(p);
+        }
+    });
+
+    toggleSection("sec-skills", hasData);
+}
+
+// Språk
+function addLangField(name = "", level = "") {
+    langCount++;
+    const id = langCount;
+    const container = document.getElementById("language-list");
+
+    const div = document.createElement("div");
+    div.id = `lang-item-${id}`;
+    div.className = "flex gap-2 items-center bg-gray-50 p-2 rounded border";
+    div.innerHTML = `
+        <input type="text" id="lang-name-${id}" value="${name}" oninput="renderLangs()" placeholder="Språk" class="border rounded p-1 text-xs flex-1">
+        <select id="lang-level-${id}" onchange="renderLangs()" class="border rounded p-1 text-xs text-gray-600">
+            <option value="">Gör ett val</option>
+            <option value="Modersmål" ${level==='Modersmål'?'selected':''}>Modersmål</option>
+            <option value="Flytande" ${level==='Flytande'?'selected':''}>Flytande</option>
+            <option value="God kunskap" ${level==='God kunskap'?'selected':''}>God kunskap</option>
+            <option value="Grundläggande" ${level==='Grundläggande'?'selected':''}>Grundläggande</option>
+        </select>
+        <button onclick="document.getElementById('lang-item-${id}').remove(); renderLangs();" class="text-red-500 text-xs">✕</button>
+    `;
+    container.appendChild(div);
+    renderLangs();
+}
+
+function addLangFromTag(langName) {
+    addLangField(langName, "Flytande");
+}
+
+function renderLangs() {
+    const preview = document.getElementById("preview-lang-list");
+    preview.innerHTML = "";
+    let hasData = false;
+
+    document.querySelectorAll("#language-list > div").forEach(div => {
+        const id = div.id.replace("lang-item-", "");
+        const name = document.getElementById(`lang-name-${id}`)?.value.trim();
+        const level = document.getElementById(`lang-level-${id}`)?.value;
+
+        if (name) {
+            hasData = true;
+            const p = document.createElement("p");
+            p.className = "text-[11px] text-slate-200 flex justify-between";
+            p.innerHTML = `<span>${name}</span> <span class="text-slate-400 text-[10px]">${level}</span>`;
+            preview.appendChild(p);
+        }
+    });
+
+    toggleSection("sec-languages", hasData);
+}
+
+// Hobbys
+function addHobbyField(name = "") {
+    hobbyCount++;
+    const id = hobbyCount;
+    const container = document.getElementById("hobby-list");
+
+    const div = document.createElement("div");
+    div.id = `hobby-item-${id}`;
+    div.className = "flex gap-2 items-center bg-gray-50 p-1.5 rounded border";
+    div.innerHTML = `
+        <input type="text" id="hobby-name-${id}" value="${name}" oninput="renderHobbies()" placeholder="Hobby" class="border rounded p-1 text-xs flex-1">
+        <button onclick="document.getElementById('hobby-item-${id}').remove(); renderHobbies();" class="text-red-500 text-xs">✕</button>
+    `;
+    container.appendChild(div);
+    renderHobbies();
+}
+
+function addHobbyFromTag(hobbyName) {
+    addHobbyField(hobbyName);
+}
+
+function renderHobbies() {
+    const preview = document.getElementById("preview-hobby-list");
+    preview.innerHTML = "";
+    let hasData = false;
+
+    document.querySelectorAll("#hobby-list > div").forEach(div => {
+        const id = div.id.replace("hobby-item-", "");
+        const name = document.getElementById(`hobby-name-${id}`)?.value.trim();
+
+        if (name) {
+            hasData = true;
+            const span = document.createElement("span");
+            span.className = "bg-slate-700 text-slate-200 text-[10px] px-2 py-0.5 rounded";
+            span.textContent = name;
+            preview.appendChild(span);
+        }
+    });
+
+    toggleSection("sec-hobbies", hasData);
+}
+
+// Hjälpfunktioner
+function toggleSection(id, show) {
+    const el = document.getElementById(id);
+    if (el) {
+        if (show) el.classList.remove("hidden");
+        else el.classList.add("hidden");
     }
-});
+}
 
-// Languages Sync
-document.getElementById('input-languages').addEventListener('input', (e) => {
-    const val = e.target.value.trim();
-    const sec = document.getElementById('sec-languages');
-    if (val) {
-        document.getElementById('preview-languages').innerText = val;
-        sec.classList.remove('hidden');
-    } else {
-        sec.classList.add('hidden');
-    }
-});
+// Ladda ned PDF
+document.getElementById("download-btn")?.addEventListener("click", () => {
+    const element = document.getElementById("cv-preview");
+    const name = document.getElementById("input-name").value.trim();
+    const fileName = name ? `CV_${name.replace(/\s+/g, "_")}.pdf` : "Mitt_CV.pdf";
 
-// Initialize First Entry Fields
-addExperienceField();
-addEducationField();
-
-// Download PDF
-document.getElementById('download-btn').addEventListener('click', () => {
-    const element = document.getElementById('cv-preview');
     const opt = {
-        margin:       0,
-        filename:     'Mitt-CV.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        margin: 0,
+        filename: fileName,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
     };
     html2pdf().set(opt).from(element).save();
 });
