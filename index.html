@@ -17,6 +17,8 @@
             min-height: 297mm;
             background: white;
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
     </style>
 </head>
@@ -30,13 +32,11 @@
         </div>
         
         <div class="flex items-center gap-4">
-            <!-- Language Switcher -->
             <select id="lang-select" onchange="changeLanguage(this.value)" class="bg-slate-800 text-sm border border-slate-700 text-white px-3 py-1.5 rounded-lg outline-none cursor-pointer">
                 <option value="sv">🇸🇪 Svenska</option>
                 <option value="en">🇬🇧 English</option>
             </select>
             
-            <!-- Download Button -->
             <button id="download-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold transition flex items-center gap-2 shadow-sm">
                 <span data-i18n="dl_btn">Ladda ner PDF</span> 📥
             </button>
@@ -44,165 +44,182 @@
     </header>
 
     <!-- Main Content -->
-    <main class="container mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <main class="container mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
 
         <!-- Form Section -->
-        <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <section class="lg:col-span-5 bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
             
             <!-- Navigation Tabs -->
-            <div class="flex justify-between mb-6 border-b border-gray-100 pb-3 text-sm">
-                <button onclick="showStep(1)" id="step-tab-1" class="font-semibold text-blue-600 border-b-2 border-blue-600 pb-1">1. <span data-i18n="tab_personal">Personuppgifter</span></button>
-                <button onclick="showStep(2)" id="step-tab-2" class="text-gray-400 pb-1">2. <span data-i18n="tab_experience">Arbetslivserfarenhet</span></button>
-                <button onclick="showStep(3)" id="step-tab-3" class="text-gray-400 pb-1">3. <span data-i18n="tab_skills">Utbildning & Färdigheter</span></button>
+            <div class="flex justify-between mb-6 border-b border-gray-100 pb-3 text-xs font-medium">
+                <button onclick="showStep(1)" id="step-tab-1" class="text-blue-600 border-b-2 border-blue-600 pb-1">1. <span data-i18n="tab_personal">Personuppgifter</span></button>
+                <button onclick="showStep(2)" id="step-tab-2" class="text-gray-400 pb-1">2. <span data-i18n="tab_experience">Erfarenhet</span></button>
+                <button onclick="showStep(3)" id="step-tab-3" class="text-gray-400 pb-1">3. <span data-i18n="tab_skills">Kompetenser</span></button>
             </div>
 
             <!-- Form Steps -->
             <form id="cv-form" onsubmit="event.preventDefault();">
                 <!-- Step 1: Personal Info -->
                 <div id="step-1" class="space-y-4">
-                    <h2 class="text-lg font-bold text-gray-700" data-i18n="title_personal">Personuppgifter</h2>
+                    <h2 class="text-base font-bold text-gray-700" data-i18n="title_personal">Personuppgifter</h2>
                     
-                    <!-- Upload Profile Photo -->
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1" data-i18n="lbl_photo">Profilbild</label>
-                        <input type="file" id="input-photo" accept="image/*" class="w-full text-sm border border-gray-200 rounded-lg p-2 focus:outline-none">
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_photo">Profilbild (Valfritt)</label>
+                        <input type="file" id="input-photo" accept="image/*" class="w-full text-xs border border-gray-200 rounded-lg p-2">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1" data-i18n="lbl_name">Fullständigt namn</label>
-                        <input type="text" id="input-name" class="w-full border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="t.ex. Anna Karlsson">
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_name">Namn</label>
+                        <input type="text" id="input-name" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Förnamn Efternamn">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1" data-i18n="lbl_title">Yrkesroll</label>
-                        <input type="text" id="input-title" class="w-full border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="t.ex. Systemutvecklare">
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_title">Yrkesroll / Titel</label>
+                        <input type="text" id="input-title" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="t.ex. Lagerarbetare, Elektriker...">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1" data-i18n="lbl_email">E-postadress</label>
-                            <input type="email" id="input-email" class="w-full border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="anna@example.se">
+                            <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_email">E-post</label>
+                            <input type="email" id="input-email" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1" data-i18n="lbl_phone">Telefonnummer</label>
-                            <input type="tel" id="input-phone" class="w-full border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="070 123 45 67">
+                            <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_phone">Telefon</label>
+                            <input type="tel" id="input-phone" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
                     </div>
 
-                    <!-- Körkort (Driving License) -->
-                    <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1" data-i18n="lbl_driver_license">Körkort</label>
-                        <input type="text" id="input-license" class="w-full border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="t.ex. Ja (B) eller Nej">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_korkort">Körkort</label>
+                            <input type="text" id="input-korkort" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="t.ex. B-körkort">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_truckkort">Truckkort</label>
+                            <input type="text" id="input-truckkort" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="t.ex. A1-A4, B1-B4">
+                        </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1" data-i18n="lbl_summary">Profiltext</label>
-                        <textarea id="input-summary" rows="3" class="w-full border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Skriv en kort beskrivning om dig själv..."></textarea>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_summary">Profil / Om mig</label>
+                        <textarea id="input-summary" rows="3" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Kort beskrivning om vem du är..."></textarea>
                     </div>
-                    <button type="button" onclick="showStep(2)" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-lg mt-4 font-medium transition" data-i18n="btn_next">Nästa ➔</button>
+
+                    <button type="button" onclick="showStep(2)" class="w-full bg-slate-900 text-white py-2 rounded-lg mt-2 text-sm font-medium" data-i18n="btn_next">Nästa ➔</button>
                 </div>
 
-                <!-- Step 2: Experience (Multiple) -->
+                <!-- Step 2: Experience -->
                 <div id="step-2" class="space-y-4 hidden">
-                    <h2 class="text-lg font-bold text-gray-700" data-i18n="title_experience">Arbetslivserfarenhet</h2>
+                    <h2 class="text-base font-bold text-gray-700" data-i18n="title_experience">Arbetslivserfarenhet</h2>
                     
-                    <div id="experience-list" class="space-y-4">
-                        <!-- Dynamic Experience Items will appear here -->
-                    </div>
+                    <div id="experience-list" class="space-y-3"></div>
 
-                    <button type="button" onclick="addExperienceField()" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 py-2 rounded-lg font-medium text-sm transition flex items-center justify-center gap-1">
+                    <button type="button" onclick="addExperienceField()" class="w-full bg-blue-50 text-blue-600 border border-blue-200 py-2 rounded-lg font-medium text-xs flex items-center justify-center gap-1">
                         <span>+</span> <span data-i18n="btn_add_exp">Lägg till erfarenhet</span>
                     </button>
 
-                    <div class="flex justify-between gap-4 pt-4">
-                        <button type="button" onclick="showStep(1)" class="w-1/2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg font-medium transition" data-i18n="btn_prev">⬅ Föregående</button>
-                        <button type="button" onclick="showStep(3)" class="w-1/2 bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-lg font-medium transition" data-i18n="btn_next">Nästa ➔</button>
+                    <div class="flex justify-between gap-3 pt-3">
+                        <button type="button" onclick="showStep(1)" class="w-1/2 bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-medium" data-i18n="btn_prev">⬅ Föregående</button>
+                        <button type="button" onclick="showStep(3)" class="w-1/2 bg-slate-900 text-white py-2 rounded-lg text-sm font-medium" data-i18n="btn_next">Nästa ➔</button>
                     </div>
                 </div>
 
                 <!-- Step 3: Education & Skills -->
                 <div id="step-3" class="space-y-4 hidden">
-                    <h2 class="text-lg font-bold text-gray-700" data-i18n="title_skills">Utbildning & Färdigheter</h2>
+                    <h2 class="text-base font-bold text-gray-700" data-i18n="title_skills">Utbildning & Kompetenser</h2>
                     
-                    <div id="education-list" class="space-y-4">
-                        <!-- Dynamic Education Items will appear here -->
-                    </div>
+                    <div id="education-list" class="space-y-3"></div>
 
-                    <button type="button" onclick="addEducationField()" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 py-2 rounded-lg font-medium text-sm transition flex items-center justify-center gap-1">
+                    <button type="button" onclick="addEducationField()" class="w-full bg-blue-50 text-blue-600 border border-blue-200 py-2 rounded-lg font-medium text-xs flex items-center justify-center gap-1">
                         <span>+</span> <span data-i18n="btn_add_edu">Lägg till utbildning</span>
                     </button>
 
                     <div class="pt-2">
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1" data-i18n="lbl_skills">Färdigheter (separera med kommatecken)</label>
-                        <input type="text" id="input-skills" class="w-full border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="JavaScript, Projektledning, Svenska, Engelska">
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_skills">Färdigheter / Datorkunskaper</label>
+                        <input type="text" id="input-skills" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="t.ex. Office-paketet, Kundservice">
                     </div>
 
-                    <button type="button" onclick="showStep(2)" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-lg font-medium transition mt-4" data-i18n="btn_prev">⬅ Föregående</button>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_languages">Språk</label>
+                        <input type="text" id="input-languages" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="t.ex. Svenska, Engelska">
+                    </div>
+
+                    <button type="button" onclick="showStep(2)" class="w-full bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-medium mt-2" data-i18n="btn_prev">⬅ Föregående</button>
                 </div>
             </form>
         </section>
 
-        <!-- Modern Template PDF Preview Section -->
-        <section class="flex justify-center overflow-x-auto">
-            <div id="cv-preview" class="a4-page p-8 flex flex-col justify-between text-gray-800 border border-gray-200">
-                <div>
-                    <!-- Header Template CV with Photo -->
-                    <div class="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-6">
-                        <div>
-                            <h1 id="preview-name" class="text-3xl font-bold text-slate-900">Anna Karlsson</h1>
-                            <p id="preview-title" class="text-base text-blue-600 font-medium mt-1">Systemutvecklare</p>
-                            <div class="flex flex-wrap gap-3 text-xs text-gray-600 mt-3">
-                                <span id="preview-email">anna@example.se</span>
-                                <span>•</span>
-                                <span id="preview-phone">070 123 45 67</span>
-                                <span id="preview-license-container" class="hidden">
-                                    <span>•</span>
-                                    <span>🚗 Körkort: <strong id="preview-license">Ja (B)</strong></span>
-                                </span>
-                            </div>
-                        </div>
-                        
-                        <!-- Photo Preview Container -->
-                        <div id="photo-container" class="w-24 h-24 rounded-full overflow-hidden border-2 border-slate-900 flex-shrink-0 hidden">
+        <!-- Colored PDF Template Section -->
+        <section class="lg:col-span-7 flex justify-center overflow-x-auto">
+            <div id="cv-preview" class="a4-page grid grid-cols-12 min-h-[297mm]">
+                
+                <!-- Left Sidebar (Colored Column) -->
+                <div class="col-span-4 bg-slate-800 text-white p-6 flex flex-col justify-between">
+                    <div>
+                        <!-- Photo -->
+                        <div id="photo-container" class="w-28 h-28 mx-auto rounded-full overflow-hidden border-2 border-blue-400 mb-6 hidden">
                             <img id="preview-photo" src="" alt="Profilbild" class="w-full h-full object-cover">
                         </div>
-                    </div>
 
-                    <!-- Profile -->
-                    <div class="mb-6">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b pb-1 mb-2" data-i18n="preview_profile">Profil</h3>
-                        <p id="preview-summary" class="text-xs text-gray-600 leading-relaxed">Erfaren och engagerad utvecklare med passion för problemlösning och moderna teknologier...</p>
-                    </div>
+                        <!-- Contact -->
+                        <div class="space-y-4 text-xs">
+                            <div id="sec-contact">
+                                <h3 class="font-bold text-blue-400 uppercase tracking-wider border-b border-slate-700 pb-1 mb-2">Kontakt</h3>
+                                <p id="preview-email" class="break-all"></p>
+                                <p id="preview-phone" class="mt-1"></p>
+                            </div>
 
-                    <!-- Experience List -->
-                    <div class="mb-6">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b pb-1 mb-3" data-i18n="preview_experience">Arbetslivserfarenhet</h3>
-                        <div id="preview-experience-list" class="space-y-3">
-                            <div>
-                                <h4 class="font-semibold text-xs text-gray-800">Företag AB</h4>
-                                <p class="text-xs text-gray-600 whitespace-pre-line mt-0.5">• Utvecklade webbapplikationer och hanterade databaser.</p>
+                            <!-- Licenses -->
+                            <div id="sec-licenses" class="hidden">
+                                <h3 class="font-bold text-blue-400 uppercase tracking-wider border-b border-slate-700 pb-1 mb-2">Körkort / Certifikat</h3>
+                                <p id="preview-korkort-container" class="hidden mb-1">🚗 <span id="preview-korkort"></span></p>
+                                <p id="preview-truckkort-container" class="hidden">🏗️ Truck: <span id="preview-truckkort"></span></p>
+                            </div>
+
+                            <!-- Languages -->
+                            <div id="sec-languages" class="hidden">
+                                <h3 class="font-bold text-blue-400 uppercase tracking-wider border-b border-slate-700 pb-1 mb-2" data-i18n="preview_languages">Språk</h3>
+                                <p id="preview-languages" class="leading-relaxed"></p>
+                            </div>
+
+                            <!-- Skills -->
+                            <div id="sec-skills" class="hidden">
+                                <h3 class="font-bold text-blue-400 uppercase tracking-wider border-b border-slate-700 pb-1 mb-2" data-i18n="preview_skills">Kompetenser</h3>
+                                <div id="preview-skills" class="flex flex-col gap-1"></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Education List -->
-                    <div class="mb-6">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b pb-1 mb-3" data-i18n="preview_education">Utbildning</h3>
-                        <div id="preview-education-list" class="space-y-2">
-                            <div>
-                                <h4 class="font-semibold text-xs text-gray-800">Kandidatexamen i Datavetenskap</h4>
-                                <p class="text-xs text-gray-500">Kungliga Tekniska högskolan (KTH)</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Skills -->
-                    <div>
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b pb-1 mb-3" data-i18n="preview_skills">Färdigheter</h3>
-                        <div id="preview-skills" class="flex flex-wrap gap-1.5">
-                            <span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-md font-medium">JavaScript</span>
-                            <span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-md font-medium">HTML/CSS</span>
-                        </div>
+                    <!-- Footer Note -->
+                    <div class="text-[10px] text-slate-400 italic pt-6">
+                        <p data-i18n="preview_references">Referenser lämnas gärna på begäran.</p>
                     </div>
                 </div>
+
+                <!-- Right Main Content -->
+                <div class="col-span-8 p-8 bg-white text-gray-800">
+                    <!-- Header -->
+                    <div class="border-b-2 border-slate-800 pb-4 mb-6">
+                        <h1 id="preview-name" class="text-2xl font-bold text-slate-900 uppercase tracking-wide"></h1>
+                        <p id="preview-title" class="text-sm font-semibold text-blue-600 mt-0.5"></p>
+                    </div>
+
+                    <!-- Summary -->
+                    <div id="sec-summary" class="mb-6 hidden">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b pb-1 mb-2" data-i18n="preview_profile">Profil</h3>
+                        <p id="preview-summary" class="text-xs text-gray-700 leading-relaxed whitespace-pre-line"></p>
+                    </div>
+
+                    <!-- Experience -->
+                    <div id="sec-experience" class="mb-6 hidden">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b pb-1 mb-3" data-i18n="preview_experience">Arbetslivserfarenhet</h3>
+                        <div id="preview-experience-list" class="space-y-3"></div>
+                    </div>
+
+                    <!-- Education -->
+                    <div id="sec-education" class="mb-6 hidden">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b pb-1 mb-3" data-i18n="preview_education">Utbildning</h3>
+                        <div id="preview-education-list" class="space-y-2"></div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
