@@ -1,318 +1,311 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { 
-    getAuth, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    signOut, 
-    onAuthStateChanged 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { 
-    getFirestore, 
-    doc, 
-    setDoc, 
-    getDoc 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-// ⚠️ مفاتيح مشروعك في Firebase
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+const translations = {
+    sv: {
+        tab_personal: "Personuppgifter",
+        tab_experience: "Erfarenhet",
+        tab_skills: "Kompetenser",
+        title_personal: "Personuppgifter",
+        lbl_photo: "Profilbild (Valfritt)",
+        lbl_name: "Namn",
+        lbl_title: "Yrkesroll / Titel",
+        lbl_email: "E-post",
+        lbl_phone: "Telefon",
+        lbl_korkort: "Körkort",
+        lbl_truckkort: "Truckkort",
+        lbl_summary: "Profil / Om mig",
+        title_experience: "Arbetslivserfarenhet",
+        btn_add_exp: "Lägg till erfarenhet",
+        title_skills: "Utbildning & Kompetenser",
+        btn_add_edu: "Lägg till utbildning",
+        lbl_skills: "Färdigheter / Datorkunskaper",
+        lbl_languages: "Språk",
+        btn_next: "Nästa ➔",
+        btn_prev: "⬅ Föregående",
+        preview_profile: "Profil",
+        preview_experience: "Arbetslivserfarenhet",
+        preview_education: "Utbildning",
+        preview_skills: "Kompetenser",
+        preview_languages: "Språk",
+        preview_references: "Referenser lämnas gärna på begäran.",
+        dl_btn: "Ladda ner PDF"
+    },
+    en: {
+        tab_personal: "Personal Info",
+        tab_experience: "Experience",
+        tab_skills: "Skills",
+        title_personal: "Personal Details",
+        lbl_photo: "Profile Picture (Optional)",
+        lbl_name: "Full Name",
+        lbl_title: "Job Title",
+        lbl_email: "Email",
+        lbl_phone: "Phone",
+        lbl_korkort: "Driver's License",
+        lbl_truckkort: "Forklift License",
+        lbl_summary: "Profile / Summary",
+        title_experience: "Work Experience",
+        btn_add_exp: "Add Experience",
+        title_skills: "Education & Skills",
+        btn_add_edu: "Add Education",
+        lbl_skills: "Skills",
+        lbl_languages: "Languages",
+        btn_next: "Next ➔",
+        btn_prev: "⬅ Previous",
+        preview_profile: "Profile",
+        preview_experience: "Work Experience",
+        preview_education: "Education",
+        preview_skills: "Skills",
+        preview_languages: "Languages",
+        preview_references: "References available upon request.",
+        dl_btn: "Download PDF"
+    }
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+let currentLang = 'sv';
 
-let currentUser = null;
-let isSignUpMode = false;
+function changeLanguage(lang) {
+    currentLang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (translations[lang][key]) {
+            element.innerText = translations[lang][key];
+        }
+    });
+}
 
-// تحديث المعاينة الحية
-function updatePreview() {
-    const firstName = document.getElementById('input-firstname').value;
-    const lastName = document.getElementById('input-lastname').value;
-    const title = document.getElementById('input-title').value;
-    const email = document.getElementById('input-email').value;
-    const phone = document.getElementById('input-phone').value;
-    const address = document.getElementById('input-address').value;
-    const zip = document.getElementById('input-zip').value;
-    const city = document.getElementById('input-city').value;
-    const dob = document.getElementById('input-dob').value;
-    const website = document.getElementById('input-website').value;
-    const korkort = document.getElementById('input-korkort').value;
-    const truckkort = document.getElementById('input-truckkort').value;
-    const summary = document.getElementById('input-summary').value;
-    const skills = document.getElementById('input-skills').value;
-    const languages = document.getElementById('input-languages').value;
-    const references = document.getElementById('input-references').value;
+function showStep(stepNumber) {
+    document.getElementById('step-1').classList.add('hidden');
+    document.getElementById('step-2').classList.add('hidden');
+    document.getElementById('step-3').classList.add('hidden');
 
-    // الاسم والعنوان
-    document.getElementById('preview-name').textContent = `${firstName} ${lastName}`.trim();
-    document.getElementById('preview-title').textContent = title;
+    [1, 2, 3].forEach(i => {
+        document.getElementById(`step-tab-${i}`).className = "text-gray-400 pb-1";
+    });
 
-    // الاتصال والمعلومات الشخصية
-    const contactParts = [];
-    if (email) contactParts.push(`📧 ${email}`);
-    if (phone) contactParts.push(`📞 ${phone}`);
-    if (address || city) contactParts.push(`📍 ${[address, zip, city].filter(Boolean).join(', ')}`);
-    if (dob) contactParts.push(`🗓️ ${dob}`);
-    if (website) contactParts.push(`🔗 ${website}`);
-    if (korkort) contactParts.push(`🚗 Körkort: ${korkort}`);
-    if (truckkort) contactParts.push(`🚜 Truckkort: ${truckkort}`);
+    document.getElementById(`step-${stepNumber}`).classList.remove('hidden');
+    document.getElementById(`step-tab-${stepNumber}`).className = "text-blue-600 border-b-2 border-blue-600 pb-1 font-semibold";
+}
+
+// Photo Upload
+document.getElementById('input-photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            document.getElementById('preview-photo').src = event.target.result;
+            document.getElementById('photo-container').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Sync Basic Input Fields
+const simpleInputs = [
+    { id: 'input-name', target: 'preview-name' },
+    { id: 'input-title', target: 'preview-title' },
+    { id: 'input-email', target: 'preview-email' },
+    { id: 'input-phone', target: 'preview-phone' }
+];
+
+simpleInputs.forEach(item => {
+    document.getElementById(item.id).addEventListener('input', (e) => {
+        document.getElementById(item.target).innerText = e.target.value.trim();
+    });
+});
+
+// Summary
+document.getElementById('input-summary').addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    const sec = document.getElementById('sec-summary');
+    if (val) {
+        document.getElementById('preview-summary').innerText = val;
+        sec.classList.remove('hidden');
+    } else {
+        sec.classList.add('hidden');
+    }
+});
+
+// Licenses Check
+function checkLicenses() {
+    const kor = document.getElementById('input-korkort').value.trim();
+    const truck = document.getElementById('input-truckkort').value.trim();
+    const sec = document.getElementById('sec-licenses');
+
+    if (kor || truck) sec.classList.remove('hidden');
+    else sec.classList.add('hidden');
+}
+
+document.getElementById('input-korkort').addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    const container = document.getElementById('preview-korkort-container');
+    if (val) {
+        document.getElementById('preview-korkort').innerText = val;
+        container.classList.remove('hidden');
+    } else {
+        container.classList.add('hidden');
+    }
+    checkLicenses();
+});
+
+document.getElementById('input-truckkort').addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    const container = document.getElementById('preview-truckkort-container');
+    if (val) {
+        document.getElementById('preview-truckkort').innerText = val;
+        container.classList.remove('hidden');
+    } else {
+        container.classList.add('hidden');
+    }
+    checkLicenses();
+});
+
+// Dynamic Experiences
+let expCount = 0;
+function addExperienceField() {
+    expCount++;
+    const id = expCount;
+    const container = document.getElementById('experience-list');
     
-    document.getElementById('preview-contact').innerHTML = contactParts.map(p => `<span>${p}</span>`).join(' • ');
-
-    // Profil
-    const summarySec = document.getElementById('preview-summary-section');
-    if (summary.trim()) {
-        summarySec.classList.remove('hidden');
-        document.getElementById('preview-summary').textContent = summary;
-    } else {
-        summarySec.classList.add('hidden');
-    }
-
-    // Skills & Languages
-    const skillsSec = document.getElementById('preview-skills-section');
-    const skillsContainer = document.getElementById('preview-skills-container');
-    const langContainer = document.getElementById('preview-languages-container');
-
-    if (skills.trim() || languages.trim()) {
-        skillsSec.classList.remove('hidden');
-        if (skills.trim()) {
-            skillsContainer.classList.remove('hidden');
-            document.getElementById('preview-skills').textContent = skills;
-        } else {
-            skillsContainer.classList.add('hidden');
-        }
-
-        if (languages.trim()) {
-            langContainer.classList.remove('hidden');
-            document.getElementById('preview-languages').textContent = languages;
-        } else {
-            langContainer.classList.add('hidden');
-        }
-    } else {
-        skillsSec.classList.add('hidden');
-    }
-
-    // Referenser
-    const refsSec = document.getElementById('preview-refs-section');
-    if (references.trim()) {
-        refsSec.classList.remove('hidden');
-        document.getElementById('preview-references').textContent = references;
-    } else {
-        refsSec.classList.add('hidden');
-    }
-
-    // Update Work & Education List
-    updateWorkPreview();
-    updateEduPreview();
-}
-
-// استماع لإدخال النصوص
-document.querySelectorAll('.cv-input').forEach(input => {
-    input.addEventListener('input', updatePreview);
-});
-
-// إدارة الخبرة العملية
-const workList = document.getElementById('work-list');
-const addWorkBtn = document.getElementById('add-work-btn');
-
-addWorkBtn.addEventListener('click', () => {
     const div = document.createElement('div');
-    div.className = 'work-item border border-slate-100 bg-slate-50 p-3 rounded-lg space-y-2 relative';
+    div.id = `exp-item-${id}`;
+    div.className = "p-2.5 border border-gray-200 rounded-lg space-y-2 relative bg-gray-50";
     div.innerHTML = `
-        <button class="remove-btn absolute top-2 right-2 text-red-500 font-bold text-xs hover:text-red-700">✕</button>
-        <div class="grid grid-cols-2 gap-2">
-            <input type="text" placeholder="Titel / Roll" class="work-title border p-1.5 rounded text-xs w-full">
-            <input type="text" placeholder="Arbetsgivare / Företag" class="work-company border p-1.5 rounded text-xs w-full">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-            <input type="text" placeholder="Period (t.ex. 2020 - Present)" class="work-period border p-1.5 rounded text-xs w-full">
-            <input type="text" placeholder="Ort" class="work-city border p-1.5 rounded text-xs w-full">
-        </div>
-        <textarea placeholder="Beskrivning av dina arbetsuppgifter..." rows="2" class="work-desc border p-1.5 rounded text-xs w-full resize-none"></textarea>
+        <button type="button" onclick="removeExperienceField(${id})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold">✕ Ta bort</button>
+        <input type="text" id="exp-title-${id}" oninput="renderExperiences()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Företag & Roll (t.ex. Volvo - Montör)">
+        <input type="text" id="exp-date-${id}" oninput="renderExperiences()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Tidsperiod (t.ex. 2020 - Nuvarande)">
+        <textarea id="exp-desc-${id}" oninput="renderExperiences()" rows="2" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Arbetsuppgifter..."></textarea>
     `;
+    container.appendChild(div);
+}
 
-    div.querySelectorAll('input, textarea').forEach(i => i.addEventListener('input', updatePreview));
-    div.querySelector('.remove-btn').addEventListener('click', () => {
-        div.remove();
-        updatePreview();
-    });
+function removeExperienceField(id) {
+    const item = document.getElementById(`exp-item-${id}`);
+    if (item) item.remove();
+    renderExperiences();
+}
 
-    workList.appendChild(div);
-});
+function renderExperiences() {
+    const previewContainer = document.getElementById('preview-experience-list');
+    const sec = document.getElementById('sec-experience');
+    previewContainer.innerHTML = '';
 
-function updateWorkPreview() {
-    const previewList = document.getElementById('preview-work-list');
-    const workSec = document.getElementById('preview-work-section');
-    previewList.innerHTML = '';
+    const items = document.querySelectorAll('#experience-list > div');
+    let hasContent = false;
 
-    const items = document.querySelectorAll('.work-item');
-    if (items.length === 0) {
-        workSec.classList.add('hidden');
-        return;
-    }
-
-    let hasData = false;
     items.forEach(item => {
-        const title = item.querySelector('.work-title').value;
-        const company = item.querySelector('.work-company').value;
-        const period = item.querySelector('.work-period').value;
-        const city = item.querySelector('.work-city').value;
-        const desc = item.querySelector('.work-desc').value;
+        const id = item.id.replace('exp-item-', '');
+        const title = document.getElementById(`exp-title-${id}`).value.trim();
+        const date = document.getElementById(`exp-date-${id}`).value.trim();
+        const desc = document.getElementById(`exp-desc-${id}`).value.trim();
 
-        if (title || company) {
-            hasData = true;
-            const el = document.createElement('div');
-            el.className = 'space-y-0.5';
-            el.innerHTML = `
+        if (title || desc) {
+            hasContent = true;
+            const expDiv = document.createElement('div');
+            expDiv.innerHTML = `
                 <div class="flex justify-between items-baseline">
-                    <span class="font-bold text-slate-800 text-xs">${title} ${company ? '— ' + company : ''}</span>
-                    <span class="text-[10px] text-slate-400">${period} ${city ? '| ' + city : ''}</span>
+                    <h4 class="font-bold text-xs text-slate-800">${title}</h4>
+                    <span class="text-[10px] font-semibold text-slate-500">${date}</span>
                 </div>
-                <p class="text-xs text-slate-600 leading-relaxed">${desc}</p>
+                <p class="text-xs text-gray-600 whitespace-pre-line mt-0.5">${desc}</p>
             `;
-            previewList.appendChild(el);
+            previewContainer.appendChild(expDiv);
         }
     });
 
-    if (hasData) workSec.classList.remove('hidden');
-    else workSec.classList.add('hidden');
+    if (hasContent) sec.classList.remove('hidden');
+    else sec.classList.add('hidden');
 }
 
-// إدارة التعليم
-const eduList = document.getElementById('edu-list');
-const addEduBtn = document.getElementById('add-edu-btn');
+// Dynamic Education
+let eduCount = 0;
+function addEducationField() {
+    eduCount++;
+    const id = eduCount;
+    const container = document.getElementById('education-list');
 
-addEduBtn.addEventListener('click', () => {
     const div = document.createElement('div');
-    div.className = 'edu-item border border-slate-100 bg-slate-50 p-3 rounded-lg space-y-2 relative';
+    div.id = `edu-item-${id}`;
+    div.className = "p-2.5 border border-gray-200 rounded-lg space-y-2 relative bg-gray-50";
     div.innerHTML = `
-        <button class="remove-btn absolute top-2 right-2 text-red-500 font-bold text-xs hover:text-red-700">✕</button>
-        <div class="grid grid-cols-2 gap-2">
-            <input type="text" placeholder="Examensbevis / Utbildning" class="edu-degree border p-1.5 rounded text-xs w-full">
-            <input type="text" placeholder="Skola / Skolnamn" class="edu-school border p-1.5 rounded text-xs w-full">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-            <input type="text" placeholder="Period (t.ex. 2016 - 2019)" class="edu-period border p-1.5 rounded text-xs w-full">
-            <input type="text" placeholder="Ort" class="edu-city border p-1.5 rounded text-xs w-full">
-        </div>
+        <button type="button" onclick="removeEducationField(${id})" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold">✕ Ta bort</button>
+        <input type="text" id="edu-title-${id}" oninput="renderEducations()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Utbildning / Examen">
+        <input type="text" id="edu-school-${id}" oninput="renderEducations()" class="w-full border border-gray-200 rounded p-1.5 text-xs" placeholder="Skola / Ort & År">
     `;
+    container.appendChild(div);
+}
 
-    div.querySelectorAll('input').forEach(i => i.addEventListener('input', updatePreview));
-    div.querySelector('.remove-btn').addEventListener('click', () => {
-        div.remove();
-        updatePreview();
-    });
+function removeEducationField(id) {
+    const item = document.getElementById(`edu-item-${id}`);
+    if (item) item.remove();
+    renderEducations();
+}
 
-    eduList.appendChild(div);
-});
+function renderEducations() {
+    const previewContainer = document.getElementById('preview-education-list');
+    const sec = document.getElementById('sec-education');
+    previewContainer.innerHTML = '';
 
-function updateEduPreview() {
-    const previewList = document.getElementById('preview-edu-list');
-    const eduSec = document.getElementById('preview-edu-section');
-    previewList.innerHTML = '';
+    const items = document.querySelectorAll('#education-list > div');
+    let hasContent = false;
 
-    const items = document.querySelectorAll('.edu-item');
-    if (items.length === 0) {
-        eduSec.classList.add('hidden');
-        return;
-    }
-
-    let hasData = false;
     items.forEach(item => {
-        const degree = item.querySelector('.edu-degree').value;
-        const school = item.querySelector('.edu-school').value;
-        const period = item.querySelector('.edu-period').value;
-        const city = item.querySelector('.edu-city').value;
+        const id = item.id.replace('edu-item-', '');
+        const title = document.getElementById(`edu-title-${id}`).value.trim();
+        const school = document.getElementById(`edu-school-${id}`).value.trim();
 
-        if (degree || school) {
-            hasData = true;
-            const el = document.createElement('div');
-            el.className = 'space-y-0.5';
-            el.innerHTML = `
-                <div class="flex justify-between items-baseline">
-                    <span class="font-bold text-slate-800 text-xs">${degree} ${school ? '— ' + school : ''}</span>
-                    <span class="text-[10px] text-slate-400">${period} ${city ? '| ' + city : ''}</span>
-                </div>
+        if (title || school) {
+            hasContent = true;
+            const eduDiv = document.createElement('div');
+            eduDiv.innerHTML = `
+                <h4 class="font-bold text-xs text-slate-800">${title}</h4>
+                <p class="text-xs text-gray-500">${school}</p>
             `;
-            previewList.appendChild(el);
+            previewContainer.appendChild(eduDiv);
         }
     });
 
-    if (hasData) eduSec.classList.remove('hidden');
-    else eduSec.classList.add('hidden');
+    if (hasContent) sec.classList.remove('hidden');
+    else sec.classList.add('hidden');
 }
 
-// تحميل PDF
-document.getElementById('download-pdf-btn').addEventListener('click', () => {
+// Skills Sync
+document.getElementById('input-skills').addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    const sec = document.getElementById('sec-skills');
+    const container = document.getElementById('preview-skills');
+    
+    if (val) {
+        const skills = val.split(',').filter(s => s.trim() !== '');
+        container.innerHTML = skills.map(s => `<span>• ${s.trim()}</span>`).join('');
+        sec.classList.remove('hidden');
+    } else {
+        sec.classList.add('hidden');
+    }
+});
+
+// Languages Sync
+document.getElementById('input-languages').addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    const sec = document.getElementById('sec-languages');
+    if (val) {
+        document.getElementById('preview-languages').innerText = val;
+        sec.classList.remove('hidden');
+    } else {
+        sec.classList.add('hidden');
+    }
+});
+
+// Initialize First Entry Fields
+addExperienceField();
+addEducationField();
+
+// Download PDF
+document.getElementById('download-btn').addEventListener('click', () => {
     const element = document.getElementById('cv-preview');
     const opt = {
-        margin:       0.5,
-        filename:     'mitt-cv.pdf',
+        margin:       0,
+        filename:     'Mitt-CV.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(element).save();
-});
-
-// Firebase Auth & Modal Controls
-const authBtn = document.getElementById('auth-btn');
-const saveCvBtn = document.getElementById('save-cv-btn');
-const authModal = document.getElementById('auth-modal');
-const closeModalBtn = document.getElementById('close-modal-btn');
-const authForm = document.getElementById('auth-form');
-const toggleAuthMode = document.getElementById('toggle-auth-mode');
-const modalTitle = document.getElementById('modal-title');
-const authSubmitBtn = document.getElementById('auth-submit-btn');
-
-authBtn.addEventListener('click', () => {
-    if (currentUser) {
-        signOut(auth);
-    } else {
-        authModal.classList.remove('hidden');
-    }
-});
-
-closeModalBtn.addEventListener('click', () => authModal.classList.add('hidden'));
-
-toggleAuthMode.addEventListener('click', () => {
-    isSignUpMode = !isSignUpMode;
-    modalTitle.textContent = isSignUpMode ? 'Skapa konto' : 'Logga in';
-    authSubmitBtn.textContent = isSignUpMode ? 'Registrera' : 'Logga in';
-    toggleAuthMode.textContent = isSignUpMode ? 'Har du redan ett konto? Logga in' : 'Skapa ett konto?';
-});
-
-authForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('auth-email').value;
-    const password = document.getElementById('auth-password').value;
-
-    try {
-        if (isSignUpMode) {
-            await createUserWithEmailAndPassword(auth, email, password);
-            alert('Konto skapat!');
-        } else {
-            await signInWithEmailAndPassword(auth, email, password);
-        }
-        authModal.classList.add('hidden');
-    } catch (error) {
-        alert('Fel: ' + error.message);
-    }
-});
-
-onAuthStateChanged(auth, async (user) => {
-    currentUser = user;
-    if (user) {
-        authBtn.textContent = 'Logga ut';
-        saveCvBtn.classList.remove('hidden');
-    } else {
-        authBtn.textContent = 'Logga in';
-        saveCvBtn.classList.add('hidden');
-    }
 });
