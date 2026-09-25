@@ -1,154 +1,231 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html lang="sv" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SnabbtCV - Skapa ditt CV gratis</title>
-    <!-- Tailwind CSS CDN -->
+    <title>SnabbtCV.se | Skapa ditt CV enkelt</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- html2pdf.js CDN -->
+    <!-- html2pdf Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @media print {
-            .no-print { display: none !important; }
+        body { font-family: 'Inter', sans-serif; }
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans">
+<body class="bg-gray-100 min-h-screen text-gray-800">
 
     <!-- Header -->
-    <header class="bg-blue-600 text-white p-4 shadow-md no-print">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold">SnabbtCV.se</h1>
-            <button onclick="generatePDF()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded shadow transition">
-                Ladda ner PDF
+    <header class="bg-slate-900 text-white p-4 shadow-lg flex justify-between items-center px-6">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">📄</span>
+            <h1 class="text-xl font-bold tracking-wide">SnabbtCV<span class="text-blue-400">.se</span></h1>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <select id="lang-select" onchange="changeLanguage(this.value)" class="bg-slate-800 text-sm border border-slate-700 text-white px-3 py-1.5 rounded-lg outline-none cursor-pointer">
+                <option value="sv">🇸🇪 Svenska</option>
+                <option value="en">🇬🇧 English</option>
+            </select>
+            
+            <button id="download-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold transition flex items-center gap-2 shadow-sm">
+                <span data-i18n="dl_btn">Ladda ner PDF</span> 📥
             </button>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto my-8 p-4 grid grid-cols-1 md:grid-cols-2 gap-8">
-        
+    <!-- Main Content -->
+    <main class="container mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
         <!-- Form Section -->
-        <section class="bg-white p-6 rounded-lg shadow no-print space-y-4">
-            <h2 class="text-xl font-bold border-b pb-2">Fyll i dina uppgifter</h2>
+        <section class="lg:col-span-5 bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
             
-            <!-- Profile Image Input -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Profilbild</label>
-                <input type="file" id="inputImage" accept="image/*" onchange="previewImage(event)" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            <!-- Navigation Tabs -->
+            <div class="flex justify-between mb-6 border-b border-gray-100 pb-3 text-xs font-medium">
+                <button onclick="showStep(1)" id="step-tab-1" class="text-blue-600 border-b-2 border-blue-600 pb-1">1. <span data-i18n="tab_personal">Personuppgifter</span></button>
+                <button onclick="showStep(2)" id="step-tab-2" class="text-gray-400 pb-1">2. <span data-i18n="tab_experience">Erfarenhet</span></button>
+                <button onclick="showStep(3)" id="step-tab-3" class="text-gray-400 pb-1">3. <span data-i18n="tab_skills">Kompetenser</span></button>
             </div>
 
-            <!-- Personal Info -->
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Namn</label>
-                    <input type="text" id="inputName" oninput="updateCV()" placeholder="Förnamn Efternamn" class="mt-1 w-full p-2 border rounded">
+            <!-- Form Steps -->
+            <form id="cv-form" onsubmit="event.preventDefault();">
+                <!-- Step 1: Personal Info -->
+                <div id="step-1" class="space-y-4">
+                    <h2 class="text-base font-bold text-gray-700" data-i18n="title_personal">Personuppgifter</h2>
+                    
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_photo">Profilbild (Valfritt)</label>
+                        <input type="file" id="input-photo" accept="image/*" class="w-full text-xs border border-gray-200 rounded-lg p-2">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_name">Namn</label>
+                        <input type="text" id="input-name" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Förnamn Efternamn">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_title">Yrkesroll / Titel</label>
+                        <input type="text" id="input-title" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="t.ex. Lagerarbetare, Elektriker...">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_email">E-post</label>
+                            <input type="email" id="input-email" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_phone">Telefon</label>
+                            <input type="tel" id="input-phone" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_korkort">Körkort</label>
+                            <input type="text" id="input-korkort" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="t.ex. B-körkort">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_truckkort">Truckkort</label>
+                            <input type="text" id="input-truckkort" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="t.ex. A1-A4, B1-B4">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_summary">Profil / Om mig</label>
+                        <textarea id="input-summary" rows="3" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Kort beskrivning om vem du är..."></textarea>
+                    </div>
+
+                    <button type="button" onclick="showStep(2)" class="w-full bg-slate-900 text-white py-2 rounded-lg mt-2 text-sm font-medium" data-i18n="btn_next">Nästa ➔</button>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Titel</label>
-                    <input type="text" id="inputTitle" oninput="updateCV()" placeholder="t.ex. Lagerarbetare" class="mt-1 w-full p-2 border rounded">
-                </div>
-            </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">E-post</label>
-                    <input type="email" id="inputEmail" oninput="updateCV()" placeholder="din.e-post@gmail.com" class="mt-1 w-full p-2 border rounded">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Telefon</label>
-                    <input type="tel" id="inputPhone" oninput="updateCV()" placeholder="070 123 45 67" class="mt-1 w-full p-2 border rounded">
-                </div>
-            </div>
+                <!-- Step 2: Experience -->
+                <div id="step-2" class="space-y-4 hidden">
+                    <h2 class="text-base font-bold text-gray-700" data-i18n="title_experience">Arbetslivserfarenhet</h2>
+                    
+                    <div id="experience-list" class="space-y-3"></div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Körkort / Licenses</label>
-                <input type="text" id="inputLicenses" oninput="updateCV()" placeholder="t.ex. B-körkort, Truckkort (A1-A4, B1-B4)" class="mt-1 w-full p-2 border rounded">
-            </div>
+                    <button type="button" onclick="addExperienceField()" class="w-full bg-blue-50 text-blue-600 border border-blue-200 py-2 rounded-lg font-medium text-xs flex items-center justify-center gap-1">
+                        <span>+</span> <span data-i18n="btn_add_exp">Lägg till erfarenhet</span>
+                    </button>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Om mig</label>
-                <textarea id="inputSummary" oninput="updateCV()" rows="3" placeholder="Kort beskrivning om dig själv..." class="mt-1 w-full p-2 border rounded"></textarea>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Arbetslivserfarenhet</label>
-                <textarea id="inputExperience" oninput="updateCV()" rows="4" placeholder="Företag - Roll (År)&#10;Beskriv dina arbetsuppgifter..." class="mt-1 w-full p-2 border rounded"></textarea>
-            </div>
-        </section>
-
-        <!-- Preview Section -->
-        <section class="bg-white p-8 rounded-lg shadow min-h-[600px]" id="cv-template">
-            <div class="flex items-center space-x-6 border-b pb-6">
-                <!-- Profile Image Container with object-cover fixing distortion -->
-                <div class="w-28 h-28 rounded-full overflow-hidden border-2 border-blue-600 flex-shrink-0 bg-gray-100">
-                    <img id="cvImage" src="https://via.placeholder.com/150" alt="Profilbild" class="w-full h-full object-cover object-center hidden">
-                </div>
-                
-                <div>
-                    <h2 id="cvName" class="text-3xl font-bold text-gray-800">Ditt Namn</h2>
-                    <p id="cvTitle" class="text-lg text-blue-600 font-medium">Din Yrkesroll</p>
-                    <div class="text-sm text-gray-600 mt-2 space-y-1">
-                        <p id="cvEmail">E-post: -</p>
-                        <p id="cvPhone">Telefon: -</p>
-                        <p id="cvLicenses" class="font-semibold text-gray-700"></p>
+                    <div class="flex justify-between gap-3 pt-3">
+                        <button type="button" onclick="showStep(1)" class="w-1/2 bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-medium" data-i18n="btn_prev">⬅ Föregående</button>
+                        <button type="button" onclick="showStep(3)" class="w-1/2 bg-slate-900 text-white py-2 rounded-lg text-sm font-medium" data-i18n="btn_next">Nästa ➔</button>
                     </div>
                 </div>
-            </div>
 
-            <div class="mt-6 space-y-6">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-800 border-b mb-2">Om mig</h3>
-                    <p id="cvSummary" class="text-gray-700 whitespace-pre-line">Här visas din beskrivning...</p>
+                <!-- Step 3: Education & Skills -->
+                <div id="step-3" class="space-y-4 hidden">
+                    <h2 class="text-base font-bold text-gray-700" data-i18n="title_skills">Utbildning & Kompetenser</h2>
+                    
+                    <div id="education-list" class="space-y-3"></div>
+
+                    <button type="button" onclick="addEducationField()" class="w-full bg-blue-50 text-blue-600 border border-blue-200 py-2 rounded-lg font-medium text-xs flex items-center justify-center gap-1">
+                        <span>+</span> <span data-i18n="btn_add_edu">Lägg till utbildning</span>
+                    </button>
+
+                    <div class="pt-2">
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_skills">Färdigheter / Datorkunskaper</label>
+                        <input type="text" id="input-skills" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="t.ex. Office-paketet, Kundservice">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-500 mb-1" data-i18n="lbl_languages">Språk</label>
+                        <input type="text" id="input-languages" class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="t.ex. Svenska, Engelska">
+                    </div>
+
+                    <button type="button" onclick="showStep(2)" class="w-full bg-gray-100 text-gray-700 py-2 rounded-lg text-sm font-medium mt-2" data-i18n="btn_prev">⬅ Föregående</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Colored PDF Template Section -->
+        <section class="lg:col-span-7 flex justify-center overflow-x-auto">
+            <div id="cv-preview" class="a4-page grid grid-cols-12 min-h-[297mm]">
+                
+                <!-- Left Sidebar (Colored Column) -->
+                <div class="col-span-4 bg-slate-800 text-white p-6 flex flex-col justify-between">
+                    <div>
+                        <!-- Photo -->
+                        <div id="photo-container" class="w-28 h-28 mx-auto rounded-full overflow-hidden border-2 border-blue-400 mb-6 hidden">
+                            <!-- التعديل الوحيد هنا لإصلاح تشوه الوجه -->
+                            <img id="preview-photo" src="" alt="Profilbild" class="w-full h-full object-cover object-center">
+                        </div>
+
+                        <!-- Contact -->
+                        <div class="space-y-4 text-xs">
+                            <div id="sec-contact">
+                                <h3 class="font-bold text-blue-400 uppercase tracking-wider border-b border-slate-700 pb-1 mb-2">Kontakt</h3>
+                                <p id="preview-email" class="break-all"></p>
+                                <p id="preview-phone" class="mt-1"></p>
+                            </div>
+
+                            <!-- Licenses -->
+                            <div id="sec-licenses" class="hidden">
+                                <h3 class="font-bold text-blue-400 uppercase tracking-wider border-b border-slate-700 pb-1 mb-2">Körkort / Certifikat</h3>
+                                <p id="preview-korkort-container" class="hidden mb-1">🚗 <span id="preview-korkort"></span></p>
+                                <p id="preview-truckkort-container" class="hidden">🏗️ Truck: <span id="preview-truckkort"></span></p>
+                            </div>
+
+                            <!-- Languages -->
+                            <div id="sec-languages" class="hidden">
+                                <h3 class="font-bold text-blue-400 uppercase tracking-wider border-b border-slate-700 pb-1 mb-2" data-i18n="preview_languages">Språk</h3>
+                                <p id="preview-languages" class="leading-relaxed"></p>
+                            </div>
+
+                            <!-- Skills -->
+                            <div id="sec-skills" class="hidden">
+                                <h3 class="font-bold text-blue-400 uppercase tracking-wider border-b border-slate-700 pb-1 mb-2" data-i18n="preview_skills">Kompetenser</h3>
+                                <div id="preview-skills" class="flex flex-col gap-1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Note -->
+                    <div class="text-[10px] text-slate-400 italic pt-6">
+                        <p data-i18n="preview_references">Referenser lämnas gärna på begäran.</p>
+                    </div>
                 </div>
 
-                <div>
-                    <h3 class="text-lg font-bold text-gray-800 border-b mb-2">Arbetslivserfarenhet</h3>
-                    <p id="cvExperience" class="text-gray-700 whitespace-pre-line">Här visas dina tidigare arbeten...</p>
+                <!-- Right Main Content -->
+                <div class="col-span-8 p-8 bg-white text-gray-800">
+                    <!-- Header -->
+                    <div class="border-b-2 border-slate-800 pb-4 mb-6">
+                        <h1 id="preview-name" class="text-2xl font-bold text-slate-900 uppercase tracking-wide"></h1>
+                        <p id="preview-title" class="text-sm font-semibold text-blue-600 mt-0.5"></p>
+                    </div>
+
+                    <!-- Summary -->
+                    <div id="sec-summary" class="mb-6 hidden">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b pb-1 mb-2" data-i18n="preview_profile">Profil</h3>
+                        <p id="preview-summary" class="text-xs text-gray-700 leading-relaxed whitespace-pre-line"></p>
+                    </div>
+
+                    <!-- Experience -->
+                    <div id="sec-experience" class="mb-6 hidden">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b pb-1 mb-3" data-i18n="preview_experience">Arbetslivserfarenhet</h3>
+                        <div id="preview-experience-list" class="space-y-3"></div>
+                    </div>
+
+                    <!-- Education -->
+                    <div id="sec-education" class="mb-6 hidden">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b pb-1 mb-3" data-i18n="preview_education">Utbildning</h3>
+                        <div id="preview-education-list" class="space-y-2"></div>
+                    </div>
                 </div>
+
             </div>
         </section>
 
     </main>
 
-    <!-- JavaScript Logic -->
-    <script>
-        function updateCV() {
-            document.getElementById('cvName').innerText = document.getElementById('inputName').value || 'Ditt Namn';
-            document.getElementById('cvTitle').innerText = document.getElementById('inputTitle').value || 'Din Yrkesroll';
-            document.getElementById('cvEmail').innerText = 'E-post: ' + (document.getElementById('inputEmail').value || '-');
-            document.getElementById('cvPhone').innerText = 'Telefon: ' + (document.getElementById('inputPhone').value || '-');
-            
-            const licenses = document.getElementById('inputLicenses').value;
-            document.getElementById('cvLicenses').innerText = licenses ? 'Körkort/Kvalifikationer: ' + licenses : '';
-
-            document.getElementById('cvSummary').innerText = document.getElementById('inputSummary').value || 'Här visas din beskrivning...';
-            document.getElementById('cvExperience').innerText = document.getElementById('inputExperience').value || 'Här visas dina tidigare arbeten...';
-        }
-
-        function previewImage(event) {
-            const reader = new FileReader();
-            reader.onload = function() {
-                const output = document.getElementById('cvImage');
-                output.src = reader.result;
-                output.classList.remove('hidden');
-            };
-            if (event.target.files[0]) {
-                reader.readAsDataURL(event.target.files[0]);
-            }
-        }
-
-        function generatePDF() {
-            const element = document.getElementById('cv-template');
-            const opt = {
-                margin:       0.5,
-                filename:     'Mitt_CV.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-            html2pdf().set(opt).from(element).save();
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
